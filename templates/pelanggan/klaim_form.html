@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ajukan Klaim - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Pelanggan</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Pelanggan</div>
+          <a class="nav-link" href="{{ url_for('pelanggan_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_scan') }}"><span class="nav-icon">&#9635;</span> Scan / Registrasi</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_produk') }}"><span class="nav-icon">&#9679;</span> Produk Saya</a>
+          <a class="nav-link active" href="{{ url_for('pelanggan_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim Saya</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Ajukan Klaim</div>
+            <div class="topbar-sub">{{ registrasi.nama_produk }} &middot; {{ registrasi.nomor_seri }}</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('pelanggan_garansi', registrasi_id=registrasi.registrasi_id) }}">Kembali</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Form pengajuan klaim</h1>
+            <p>Jelaskan masalah produk dan lampirkan foto kerusakan.</p>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="card">
+            <form method="post" action="{{ url_for('pelanggan_klaim_form', registrasi_id=registrasi.registrasi_id) }}" enctype="multipart/form-data">
+              <div class="form-group">
+                <label for="deskripsi_masalah">Deskripsi masalah</label>
+                <textarea class="form-control" id="deskripsi_masalah" name="deskripsi_masalah"
+                          minlength="10" required
+                          placeholder="Jelaskan gejala kerusakan, kapan terjadi, dan kondisi produk."></textarea>
+                <span class="form-help">Minimal 10 karakter.</span>
+              </div>
+              <div class="form-group">
+                <label for="foto_kerusakan">Foto kerusakan</label>
+                <input type="file" class="form-control" id="foto_kerusakan" name="foto_kerusakan"
+                       accept=".jpg,.jpeg,.png,.webp" data-file-label="#nama-foto" required>
+                <span class="form-help">Format jpg, jpeg, png, atau webp. Maksimal 5 MB.</span>
+                <span class="form-help" id="nama-foto"></span>
+              </div>
+              <div class="form-group">
+                <label for="bukti_pembelian">Bukti pembelian (opsional)</label>
+                <input type="file" class="form-control" id="bukti_pembelian" name="bukti_pembelian"
+                       accept=".jpg,.jpeg,.png,.webp" data-file-label="#nama-bukti">
+                <span class="form-help">Jika kosong, sistem menggunakan bukti pembelian dari registrasi.</span>
+                <span class="form-help" id="nama-bukti"></span>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Kirim klaim</button>
+                <a class="btn btn-secondary" href="{{ url_for('pelanggan_garansi', registrasi_id=registrasi.registrasi_id) }}">Batal</a>
+              </div>
+            </form>
+          </div>
+
+          <aside>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Produk</h2>
+                  <p>Klaim untuk unit berikut.</p>
+                </div>
+                <img class="qr-thumb" src="{{ url_for('qr_gambar', token_qr=registrasi.token_qr) }}" alt="QR {{ registrasi.nomor_seri }}" width="64" height="64">
+              </div>
+              <div class="info-list">
+                <div class="info-row"><span class="label">Produk</span><span class="value">{{ registrasi.nama_produk }}</span></div>
+                <div class="info-row"><span class="label">Nomor seri</span><span class="value"><span class="code">{{ registrasi.nomor_seri }}</span></span></div>
+                <div class="info-row"><span class="label">Pembelian</span><span class="value">{{ registrasi.tanggal_pembelian|tanggal }}</span></div>
+                <div class="info-row"><span class="label">Garansi berakhir</span><span class="value">{{ registrasi.tanggal_berakhir|tanggal }}</span></div>
+                <div class="info-row"><span class="label">Status garansi</span><span class="value"><span class="badge {{ registrasi.status_garansi_aktual|status_kelas }}">{{ registrasi.status_garansi_aktual|status_label }}</span></span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Yang perlu diperhatikan</h3>
+              <ul class="small muted" style="padding-left: 18px; line-height: 1.9;">
+                <li>Klaim hanya dapat diajukan saat garansi aktif.</li>
+                <li>Foto kerusakan harus jelas dan relevan.</li>
+                <li>Status awal klaim adalah menunggu verifikasi.</li>
+                <li>Petugas akan meninjau klaim sebelum keputusan diberikan.</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

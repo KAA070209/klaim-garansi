@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Petugas - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel {{ current_user.role|title }}</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">{{ 'Menu Petugas' if request.path.startswith('/petugas/manage') or current_user.role=='petugas' else 'Menu Admin' }}</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'admin_dashboard' }}" href="{{ url_for('petugas_dashboard' if request.path.startswith('/petugas/manage') or current_user.role=='petugas' else 'admin_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          {% if current_user.role=='admin' %}<a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_petugas') }}" href="{{ url_for('admin_petugas') }}"><span class="nav-icon">&#9679;</span> Petugas</a>{% endif %}
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_pelanggan') }}" href="{{ url_for('petugas_manage_pelanggan' if request.path.startswith('/petugas/manage') else 'admin_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_kebijakan') }}" href="{{ url_for('petugas_manage_kebijakan' if request.path.startswith('/petugas/manage') else 'admin_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_produk') }}" href="{{ url_for('petugas_manage_produk' if request.path.startswith('/petugas/manage') else 'admin_produk') }}"><span class="nav-icon">&#9670;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_qr') }}" href="{{ url_for('petugas_manage_qr' if request.path.startswith('/petugas/manage') else 'admin_qr') }}"><span class="nav-icon">&#9635;</span> QR / Unit</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_registrasi') }}" href="{{ url_for('petugas_manage_registrasi' if request.path.startswith('/petugas/manage') else 'admin_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_garansi') }}" href="{{ url_for('petugas_manage_garansi' if request.path.startswith('/petugas/manage') else 'admin_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_klaim') }}" href="{{ url_for('petugas_manage_klaim' if request.path.startswith('/petugas/manage') else 'admin_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_servis') }}" href="{{ url_for('petugas_manage_servis' if request.path.startswith('/petugas/manage') else 'admin_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_notifikasi') }}" href="{{ url_for('petugas_manage_notifikasi' if request.path.startswith('/petugas/manage') else 'admin_notifikasi') }}"><span class="nav-icon">&#9993;</span> Notifikasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_log') }}" href="{{ url_for('petugas_manage_log' if request.path.startswith('/petugas/manage') else 'admin_log') }}"><span class="nav-icon">&#9776;</span> Log</a>
+          {% if current_user.role=='admin' %}<a class="nav-link {{ 'active' if request.endpoint == 'admin_laporan' }}" href="{{ url_for('admin_laporan') }}"><span class="nav-icon">&#9636;</span> Laporan</a>{% endif %}
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Edit Petugas</div>
+            <div class="topbar-sub">{{ petugas.nama }} &middot; {{ petugas.email }}</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          {% if current_user.role=='admin' %}<a class="btn btn-secondary btn-sm" href="{{ url_for('admin_petugas') }}">Kembali</a>{% endif %}
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Ubah data petugas</h1>
+            <p>Kosongkan password jika tidak ingin mengubah password akun.</p>
+          </div>
+        </div>
+
+        <div class="card" style="max-width: 820px;">
+          <form method="post" action="{{ url_for('admin_petugas_edit', petugas_id=petugas.id) }}">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="nama">Nama lengkap</label>
+                <input type="text" class="form-control" id="nama" name="nama"
+                       value="{{ form.nama }}" minlength="3" required>
+              </div>
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email"
+                       value="{{ form.email }}" required>
+              </div>
+              <div class="form-group">
+                <label for="nomor_telepon">Nomor telepon</label>
+                <input type="text" class="form-control" id="nomor_telepon" name="nomor_telepon"
+                       value="{{ form.nomor_telepon }}" placeholder="08xxxxxxxxxx">
+              </div>
+              <div class="form-group">
+                <label for="alamat">Alamat</label>
+                <input type="text" class="form-control" id="alamat" name="alamat"
+                       value="{{ form.alamat }}" placeholder="Opsional">
+              </div>
+              <div class="form-group">
+                <label for="password">Password baru</label>
+                <input type="password" class="form-control" id="password" name="password"
+                       minlength="8" autocomplete="new-password" placeholder="Opsional">
+                <span class="form-help">Minimal 8 karakter jika diisi.</span>
+              </div>
+              <div class="form-group">
+                <label for="konfirmasi_password">Konfirmasi password baru</label>
+                <input type="password" class="form-control" id="konfirmasi_password"
+                       name="konfirmasi_password" minlength="8" autocomplete="new-password"
+                       placeholder="Ulangi password baru">
+              </div>
+              <div class="form-group full">
+                <label class="checkbox-row">
+                  <input type="checkbox" name="aktif" value="1" {{ 'checked' if form.aktif }}>
+                  Akun aktif
+                </label>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Simpan perubahan</button>
+              {% if current_user.role=='admin' %}<a class="btn btn-secondary" href="{{ url_for('admin_petugas') }}">Batal</a>{% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

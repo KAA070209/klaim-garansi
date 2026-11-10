@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if qr %}Informasi Produk - {{ qr.nama_produk }}{% else %}QR Code Tidak Valid{% endif %} - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="public-shell">
+    <header class="public-topbar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Scan QR Code Produk</div>
+        </div>
+      </div>
+      <div class="actions">
+        {% if current_user %}
+          <a class="btn btn-secondary" href="{{ url_for('admin_dashboard') if current_user.role == 'admin' else (url_for('petugas_dashboard') if current_user.role == 'petugas' else url_for('pelanggan_dashboard')) }}">Dashboard</a>
+          <a class="btn btn-ghost" href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+          <a class="btn btn-secondary" href="{{ url_for('login', next=request.path) }}">Login</a>
+          <a class="btn btn-primary" href="{{ url_for('register', next=request.path) }}">Daftar</a>
+        {% endif %}
+      </div>
+    </header>
+
+    <main class="public-content">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% if not qr %}
+        <div class="card text-center" style="padding: 46px 24px;">
+          <div class="brand-mark" style="margin: 0 auto 16px; background: #b73a32;">!</div>
+          <h1>QR Code tidak valid</h1>
+          <p class="muted">{{ pesan or 'QR Code tidak ditemukan atau sudah tidak aktif.' }}</p>
+          <p class="small muted">Pastikan Anda memindai QR Code yang tertera pada kemasan produk.</p>
+        </div>
+      {% else %}
+        <section class="hero-card">
+          <span class="badge badge-primary mb-1">Produk Terverifikasi</span>
+          <h1>{{ qr.nama_produk }}</h1>
+          <p>{{ qr.kategori_model }}{% if qr.deskripsi %} &middot; {{ qr.deskripsi }}{% endif %}</p>
+          <div class="hero-actions">
+            {% if qr.registrasi_id %}
+              <span class="badge badge-success">Produk sudah terdaftar</span>
+            {% else %}
+              <span class="badge badge-warning">Produk belum diregistrasikan</span>
+            {% endif %}
+            {% if qr.status_produk == 'aktif' %}
+              <span class="badge badge-info">Produk aktif</span>
+            {% else %}
+              <span class="badge badge-neutral">Produk nonaktif</span>
+            {% endif %}
+          </div>
+        </section>
+
+        <div class="public-grid">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Informasi produk</h2>
+                  <p>Data unit yang terhubung dengan QR Code ini.</p>
+                </div>
+                <img class="qr-thumb" src="{{ url_for('qr_gambar', token_qr=qr.token_qr) }}"
+                     alt="QR Code {{ qr.nomor_seri }}" width="64" height="64">
+              </div>
+              <div class="info-list">
+                <div class="info-row">
+                  <span class="label">Nama produk</span>
+                  <span class="value">{{ qr.nama_produk }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Kategori / model</span>
+                  <span class="value">{{ qr.kategori_model }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Nomor seri</span>
+                  <span class="value"><span class="code">{{ qr.nomor_seri }}</span></span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Kebijakan garansi</span>
+                  <span class="value">{{ qr.nama_kebijakan }} ({{ qr.durasi_bulan }} bulan)</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Status unit</span>
+                  <span class="value"><span class="badge {{ qr.status_qr|status_kelas }}">{{ qr.status_qr|status_label }}</span></span>
+                </div>
+              </div>
+            </div>
+
+            {% if qr.registrasi_id %}
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <h2>Status garansi</h2>
+                    <p>Masa berlaku garansi produk ini.</p>
+                  </div>
+                  <span class="badge {{ qr.status_garansi_aktual|status_kelas }}">{{ qr.status_garansi_aktual|status_label }}</span>
+                </div>
+                <div class="info-list">
+                  <div class="info-row">
+                    <span class="label">Tanggal pembelian</span>
+                    <span class="value">{{ qr.tanggal_pembelian|tanggal }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Tempat pembelian</span>
+                    <span class="value">{{ qr.tempat_pembelian }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Garansi mulai</span>
+                    <span class="value">{{ qr.tanggal_mulai|tanggal }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Garansi berakhir</span>
+                    <span class="value">{{ qr.tanggal_berakhir|tanggal }}</span>
+                  </div>
+                </div>
+                {% if is_owner %}
+                  <div class="form-actions">
+                    <a class="btn btn-primary" href="{{ url_for('pelanggan_garansi', registrasi_id=qr.registrasi_id) }}">Lihat detail garansi</a>
+                    {% if bisa_klaim %}
+                      <a class="btn btn-success" href="{{ url_for('pelanggan_klaim_form', registrasi_id=qr.registrasi_id) }}">Ajukan klaim</a>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+
+          <aside>
+            <div class="card">
+              <h2>Registrasi produk</h2>
+              {% if qr.registrasi_id %}
+                <p class="muted">Produk ini sudah memiliki registrasi aktif. Registrasi ulang tidak diperlukan.</p>
+                {% if is_owner %}
+                  <p class="small">Anda adalah pemilik registrasi produk ini. Buka halaman garansi untuk melihat detail dan mengajukan klaim.</p>
+                {% else %}
+                  <p class="small muted">Jika Anda merasa produk ini milik Anda, hubungi petugas layanan untuk bantuan.</p>
+                {% endif %}
+              {% elif qr.status_qr != 'tersedia' or qr.status_produk != 'aktif' %}
+                <p class="muted">Unit produk ini sedang tidak tersedia untuk registrasi.</p>
+              {% elif not qr.kebijakan_aktif %}
+                <p class="muted">Kebijakan garansi produk sedang tidak aktif. Registrasi belum dapat dilakukan.</p>
+              {% elif can_register %}
+                <p class="muted">Lengkapi data pembelian untuk mengaktifkan garansi produk Anda.</p>
+                <a class="btn btn-primary btn-block" href="{{ url_for('qr_registrasi', token_qr=qr.token_qr) }}">Registrasikan produk</a>
+              {% elif not current_user %}
+                <p class="muted">Login atau buat akun pelanggan terlebih dahulu untuk melakukan registrasi produk.</p>
+                <div class="form-actions">
+                  <a class="btn btn-primary" href="{{ url_for('login', next=request.path) }}">Login</a>
+                  <a class="btn btn-secondary" href="{{ url_for('register', next=request.path) }}">Daftar akun</a>
+                </div>
+              {% elif current_user.role != 'pelanggan' %}
+                <p class="muted">Registrasi produk hanya dapat dilakukan oleh akun pelanggan.</p>
+              {% else %}
+                <p class="muted">Produk belum dapat diregistrasikan saat ini.</p>
+              {% endif %}
+            </div>
+
+            <div class="card">
+              <h3>Butuh bantuan?</h3>
+              <p class="small muted mb-0">
+                Simpan bukti pembelian dan kemasan produk. Jika mengalami kendala, hubungi petugas
+                layanan garansi dengan menyebutkan nomor seri produk.
+              </p>
+            </div>
+          </aside>
+        </div>
+      {% endif %}
+    </main>
+
+    <footer class="public-footer">
+      Sistem Klaim Garansi Berbasis QR Code &middot; {{ hari_ini.year }}
+    </footer>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

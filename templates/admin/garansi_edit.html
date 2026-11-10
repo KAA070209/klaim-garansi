@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit Garansi - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel {{ current_user.role|title }}</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">{{ 'Menu Petugas' if request.path.startswith('/petugas/manage') or current_user.role=='petugas' else 'Menu Admin' }}</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'admin_dashboard' }}" href="{{ url_for('petugas_dashboard' if request.path.startswith('/petugas/manage') or current_user.role=='petugas' else 'admin_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          {% if current_user.role=='admin' %}<a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_petugas') }}" href="{{ url_for('admin_petugas') }}"><span class="nav-icon">&#9679;</span> Petugas</a>{% endif %}
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_pelanggan') }}" href="{{ url_for('petugas_manage_pelanggan' if request.path.startswith('/petugas/manage') else 'admin_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_kebijakan') }}" href="{{ url_for('petugas_manage_kebijakan' if request.path.startswith('/petugas/manage') else 'admin_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_produk') }}" href="{{ url_for('petugas_manage_produk' if request.path.startswith('/petugas/manage') else 'admin_produk') }}"><span class="nav-icon">&#9670;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_qr') }}" href="{{ url_for('petugas_manage_qr' if request.path.startswith('/petugas/manage') else 'admin_qr') }}"><span class="nav-icon">&#9635;</span> QR / Unit</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_registrasi') }}" href="{{ url_for('petugas_manage_registrasi' if request.path.startswith('/petugas/manage') else 'admin_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_garansi') }}" href="{{ url_for('petugas_manage_garansi' if request.path.startswith('/petugas/manage') else 'admin_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_klaim') }}" href="{{ url_for('petugas_manage_klaim' if request.path.startswith('/petugas/manage') else 'admin_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_servis') }}" href="{{ url_for('petugas_manage_servis' if request.path.startswith('/petugas/manage') else 'admin_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_notifikasi') }}" href="{{ url_for('petugas_manage_notifikasi' if request.path.startswith('/petugas/manage') else 'admin_notifikasi') }}"><span class="nav-icon">&#9993;</span> Notifikasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_log') }}" href="{{ url_for('petugas_manage_log' if request.path.startswith('/petugas/manage') else 'admin_log') }}"><span class="nav-icon">&#9776;</span> Log</a>
+          {% if current_user.role=='admin' %}<a class="nav-link {{ 'active' if request.endpoint == 'admin_laporan' }}" href="{{ url_for('admin_laporan') }}"><span class="nav-icon">&#9636;</span> Laporan</a>{% endif %}
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left"><div><div class="topbar-title">Edit Garansi</div><div class="topbar-sub"></div></div></div>
+        <div class="topbar-right">
+          <div class="user-chip"><div class="avatar">{{ current_user.nama[:1]|upper }}</div><div class="user-meta"><div class="small"><strong>{{ current_user.nama }}</strong></div><div class="small muted">{{ current_user.email }}</div></div></div>
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}"><span>{{ message }}</span><button type="button" class="close-alert" aria-label="Tutup">&times;</button></div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="card"><form method="post" >
+          <div class="form-grid"><div class="form-group full"><strong>{{ item.nama_pelanggan }}</strong> — {{ item.nama_produk }} ({{ item.nomor_seri }})</div>
+      <div class="form-group"><label>Tanggal Mulai</label><input class="form-control" type="date" name="tanggal_mulai" value="{{ form.tanggal_mulai }}" required></div>
+      <div class="form-group"><label>Tanggal Berakhir</label><input class="form-control" type="date" name="tanggal_berakhir" value="{{ form.tanggal_berakhir }}" required></div>
+      <div class="form-group"><label>Status</label><select class="form-select" name="status"><option value="aktif" {{ 'selected' if form.status=='aktif' }}>Aktif</option><option value="berakhir" {{ 'selected' if form.status=='berakhir' }}>Berakhir</option><option value="dibatalkan" {{ 'selected' if form.status=='dibatalkan' }}>Dibatalkan</option></select></div></div>
+          <div class="form-actions"><button class="btn btn-primary" type="submit">Simpan</button><a class="btn btn-secondary" href="{{ url_for('petugas_manage_garansi' if request.path.startswith('/petugas/manage') else 'admin_garansi') }}">Batal</a></div>
+        </form></div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registrasi Produk - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Pelanggan</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Pelanggan</div>
+          <a class="nav-link" href="{{ url_for('pelanggan_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_scan') }}"><span class="nav-icon">&#9635;</span> Scan / Registrasi</a>
+          <a class="nav-link active" href="{{ url_for('pelanggan_produk') }}"><span class="nav-icon">&#9679;</span> Produk Saya</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim Saya</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Registrasi Produk</div>
+            <div class="topbar-sub">{{ qr.nama_produk }} &middot; {{ qr.nomor_seri }}</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('qr_detail', token_qr=qr.token_qr) }}">Kembali ke QR</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Lengkapi data pembelian</h1>
+            <p>Data ini digunakan untuk mengaktifkan garansi produk Anda.</p>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="card">
+            <form method="post" action="{{ url_for('qr_registrasi', token_qr=qr.token_qr) }}" enctype="multipart/form-data">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label for="nama">Nama lengkap</label>
+                  <input type="text" class="form-control" id="nama" name="nama"
+                         value="{{ form.nama }}" minlength="3" required>
+                </div>
+                <div class="form-group">
+                  <label for="nomor_telepon">Nomor telepon</label>
+                  <input type="text" class="form-control" id="nomor_telepon" name="nomor_telepon"
+                         value="{{ form.nomor_telepon }}" placeholder="08xxxxxxxxxx">
+                </div>
+                <div class="form-group">
+                  <label for="email">Email akun</label>
+                  <input type="email" class="form-control" id="email" name="email"
+                         value="{{ form.email }}" readonly>
+                  <span class="form-help">Email mengikuti akun yang sedang login.</span>
+                </div>
+                <div class="form-group">
+                  <label for="tanggal_pembelian">Tanggal pembelian</label>
+                  <input type="date" class="form-control" id="tanggal_pembelian" name="tanggal_pembelian"
+                         value="{{ form.tanggal_pembelian }}" max="{{ hari_ini }}" required>
+                </div>
+                <div class="form-group">
+                  <label for="tempat_pembelian">Tempat pembelian</label>
+                  <input type="text" class="form-control" id="tempat_pembelian" name="tempat_pembelian"
+                         value="{{ form.tempat_pembelian }}" required>
+                </div>
+                <div class="form-group">
+                  <label for="nomor_invoice">Nomor invoice</label>
+                  <input type="text" class="form-control" id="nomor_invoice" name="nomor_invoice"
+                         value="{{ form.nomor_invoice }}" required>
+                </div>
+                <div class="form-group full">
+                  <label for="bukti_pembelian">Bukti pembelian</label>
+                  <input type="file" class="form-control" id="bukti_pembelian" name="bukti_pembelian"
+                         accept=".jpg,.jpeg,.png,.webp" data-file-label="#nama-bukti" required>
+                  <span class="form-help">Format jpg, jpeg, png, atau webp. Maksimal 5 MB.</span>
+                  <span class="form-help" id="nama-bukti"></span>
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Simpan registrasi</button>
+                <a class="btn btn-secondary" href="{{ url_for('qr_detail', token_qr=qr.token_qr) }}">Batal</a>
+              </div>
+            </form>
+          </div>
+
+          <aside>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Produk</h2>
+                  <p>Unit yang akan diregistrasikan.</p>
+                </div>
+                <img class="qr-thumb" src="{{ url_for('qr_gambar', token_qr=qr.token_qr) }}" alt="QR {{ qr.nomor_seri }}" width="64" height="64">
+              </div>
+              <div class="info-list">
+                <div class="info-row"><span class="label">Nama produk</span><span class="value">{{ qr.nama_produk }}</span></div>
+                <div class="info-row"><span class="label">Kategori</span><span class="value">{{ qr.kategori_model }}</span></div>
+                <div class="info-row"><span class="label">Nomor seri</span><span class="value"><span class="code">{{ qr.nomor_seri }}</span></span></div>
+                <div class="info-row"><span class="label">Kebijakan garansi</span><span class="value">{{ qr.nama_kebijakan }}</span></div>
+                <div class="info-row"><span class="label">Durasi garansi</span><span class="value">{{ qr.durasi_bulan }} bulan</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Catatan</h3>
+              <p class="small muted mb-0">
+                Masa garansi dihitung dari tanggal pembelian sesuai kebijakan produk.
+                Pastikan bukti pembelian dapat terbaca dengan jelas.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

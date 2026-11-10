@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Masuk - VoltShield E-Garansi</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%231f5fd6' d='M12 0l10 4.5v7c0 6-4.5 10.5-10 12.5C6.5 22 2 17.5 2 11.5v-7z'/%3E%3Cpath fill='%23fff' d='M12 3.2 19 6.3v5.2c0 4.9-3.6 8.7-7 10.4-3.4-1.7-7-5.5-7-10.4V6.3z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="au-body">
+
+  {% include '_auth_top.html' %}
+
+  <main class="au-main">
+    {% include '_auth_left.html' %}
+
+    <aside class="au-card" aria-label="Formulir masuk VoltShield">
+      <div class="au-card-head">
+        <div class="au-tabs" role="tablist" aria-label="Pilih portal">
+          <button class="au-tab is-active" type="button" role="tab" aria-selected="true" data-au-portal="pelanggan">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3.3 8L12 13l8.7-5"/><path d="M12 13v8"/>
+            </svg>
+            Pemilik Produk
+          </button>
+          <button class="au-tab" type="button" role="tab" aria-selected="false" data-au-portal="petugas">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20"/>
+            </svg>
+            Petugas Resmi
+          </button>
+        </div>
+        <span class="au-version">v3.4.1</span>
+      </div>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="au-alerts">
+            {% for category, message in messages %}
+              <div class="au-alert au-alert-{{ category if category in ['success', 'danger', 'warning', 'info'] else 'info' }}">
+                <span>{{ message }}</span>
+                <button type="button" class="au-alert-close" aria-label="Tutup">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      
+      
+
+      <div class="au-methods" role="tablist" aria-label="Metode masuk">
+        <button class="au-method" type="button" role="tab" aria-selected="false" data-au-method="wa">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4c-1.5 0-3-.4-4.2-1.1L3 20l1.3-5.1a8 8 0 0 1-1.1-4c0-4.7 3.8-8.5 8.5-8.5s8.3 3.8 8.3 8.6Z"/>
+            <path d="M9 10h.01M12.2 10h.01M15.4 10h.01"/>
+          </svg>
+          WhatsApp / SMS
+        </button>
+        <button class="au-method is-active" type="button" role="tab" aria-selected="true" data-au-method="email">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>
+          </svg>
+          Email &amp; Sandi
+        </button>
+      </div>
+
+      <div class="au-method-panel" data-au-method-panel="wa" hidden>
+        <div class="au-soon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4c-1.5 0-3-.4-4.2-1.1L3 20l1.3-5.1a8 8 0 0 1-1.1-4c0-4.7 3.8-8.5 8.5-8.5s8.3 3.8 8.3 8.6Z"/>
+          </svg>
+          <strong>Masuk via WhatsApp / SMS segera hadir</strong>
+          <p>Verifikasi kode OTP via WhatsApp sedang dalam tahap integrasi dengan penyedia resmi. Untuk sementara, gunakan <b>Email &amp; Sandi</b> untuk masuk ke dashboard Anda.</p>
+        </div>
+      </div>
+
+      <form class="au-form au-method-panel" data-au-method-panel="email" method="post" action="{{ url_for('login') }}">
+        <input type="hidden" name="next" value="{{ next_url or '' }}">
+
+        <label class="au-field" for="email">
+          <span>Alamat Email Terdaftar</span>
+          <input class="au-input" type="email" id="email" name="email" value="{{ request.form.get('email', '') }}" placeholder="nama@email.com" autocomplete="email" required>
+        </label>
+
+        <label class="au-field" for="password">
+          <span>Kata Sandi</span>
+          <span class="au-input-icon">
+            <input class="au-input icon-right" type="password" id="password" name="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required>
+            <button type="button" class="au-input-glyph au-toggle-password" aria-label="Tampilkan atau sembunyikan sandi" style="border:0;background:transparent;cursor:pointer;padding:0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </span>
+        </label>
+
+        <div class="au-password-tip">
+          <span>Gunakan sandi yang sama seperti saat registrasi.</span>
+        </div>
+
+        <div class="au-remember">
+          <label class="au-check" for="ingat_saya">
+            <input type="checkbox" id="ingat_saya" name="ingat_saya" value="1" {{ 'checked' if request.form.get('ingat_saya') else '' }}>
+            Ingat sesi saya di browser ini
+          </label>
+          <span class="au-session-chip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+            </svg>
+            30 Hari Aktif
+          </span>
+        </div>
+
+        <button type="submit" class="au-submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+          </svg>
+          Masuk ke Dashboard Garansi Saya
+        </button>
+      </form>
+
+      <p class="au-switch">
+        atau beli barang &amp; belum punya akun?
+        <a href="{{ url_for('register', next=next_url or '') }}">
+          Daftarkan Unit Baru &amp; Buat Akun Garansi
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14"/><path d="M13 6l6 6-6 6"/>
+          </svg>
+        </a>
+      </p>
+
+      <div class="au-lock-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+        </svg>
+        Enkripsi SSL 256-Bit • Data Pribadi Dilindungi UU PDP
+      </div>
+
+      <div class="au-demo" data-au-demo="pelanggan">
+        <strong>Akun demo Pelanggan:</strong><br>
+        <code>pelanggan@garansi.local</code> / <code>Pelanggan123!</code>
+      </div>
+      <div class="au-demo is-hidden" data-au-demo="petugas">
+        <strong>Akun demo Petugas &amp; Admin:</strong><br>
+        Admin: <code>admin@garansi.local</code> / <code>Admin123!</code><br>
+        Petugas: <code>petugas@garansi.local</code> / <code>Petugas123!</code>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="au-footer">
+    <div class="au-footer-inner">
+      <span>© {{ hari_ini.year if hari_ini else '2026' }} VoltShield Assurance System. All rights reserved.</span>
+      <nav class="au-footer-links" aria-label="Tautan bantuan">
+        <a href="tel:02150001234">
+          <span>Helpdesk Support</span>
+        </a>
+        <a href="{{ url_for('index') }}#faq"><span>Ketentuan Lisensi</span></a>
+        <a href="{{ url_for('index') }}#faq"><span>Protokol Keamanan</span></a>
+      </nav>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>

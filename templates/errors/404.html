@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Halaman Tidak Ditemukan - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark mb-2">404</div>
+      <h1 class="auth-title">Halaman tidak ditemukan</h1>
+      <p class="auth-sub">Data atau halaman yang Anda cari tidak tersedia.</p>
+      <div class="actions">
+        {% if current_user %}
+          <a class="btn btn-primary" href="{{ url_for('admin_dashboard') if current_user.role == 'admin' else (url_for('petugas_dashboard') if current_user.role == 'petugas' else url_for('pelanggan_dashboard')) }}">Kembali ke dashboard</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

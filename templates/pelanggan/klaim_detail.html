@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detail Klaim #{{ klaim.id }} - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Pelanggan</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Pelanggan</div>
+          <a class="nav-link" href="{{ url_for('pelanggan_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_scan') }}"><span class="nav-icon">&#9635;</span> Scan / Registrasi</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_produk') }}"><span class="nav-icon">&#9679;</span> Produk Saya</a>
+          <a class="nav-link active" href="{{ url_for('pelanggan_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim Saya</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Detail Klaim #{{ klaim.id }}</div>
+            <div class="topbar-sub">Diajukan {{ klaim.tanggal_klaim|tanggalwaktu }}</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('pelanggan_klaim') }}">Kembali</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="status-hero">
+          <div>
+            <h2>{{ klaim.nama_produk }}</h2>
+            <p class="muted mb-0">{{ klaim.nomor_seri }} &middot; Diajukan {{ klaim.tanggal_klaim|tanggalwaktu }}</p>
+          </div>
+          <div class="actions">
+            <span class="badge {{ klaim.status|status_kelas }}">{{ klaim.status|status_label }}</span>
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('pelanggan_garansi', registrasi_id=klaim.registrasi_id) }}">Detail produk</a>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Deskripsi masalah</h2>
+                  <p>Laporan yang Anda ajukan.</p>
+                </div>
+              </div>
+              <p style="white-space: pre-line;">{{ klaim.deskripsi_masalah }}</p>
+              {% if klaim.alasan_penolakan %}
+                <div class="alert alert-danger mb-0">
+                  <span><strong>Alasan penolakan:</strong> {{ klaim.alasan_penolakan }}</span>
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Lampiran</h2>
+                  <p>Foto kerusakan dan bukti pembelian.</p>
+                </div>
+              </div>
+              {% if lampiran %}
+                <div class="attachment-grid">
+                  {% for item in lampiran %}
+                    <div class="attachment-card">
+                      <a href="{{ url_for('berkas', filename=item.path_file) }}" target="_blank" rel="noopener">
+                        <img src="{{ url_for('berkas', filename=item.path_file) }}" alt="{{ item.nama_file }}" loading="lazy">
+                      </a>
+                      <div class="attachment-meta">
+                        <strong>{{ item.jenis|replace('_', ' ')|title }}</strong>
+                        {{ item.tipe_file|upper }} &middot; {{ item.ukuran_file|ukuran }}
+                      </div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="empty-state">Tidak ada lampiran.</div>
+              {% endif %}
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Riwayat status</h2>
+                  <p>Perjalanan proses klaim Anda.</p>
+                </div>
+              </div>
+              <div class="timeline">
+                {% for item in riwayat %}
+                  <div class="timeline-item">
+                    <span class="timeline-dot"></span>
+                    <div class="timeline-title">
+                      {% if item.status_sebelumnya %}
+                        {{ item.status_sebelumnya|status_label }} &rarr; {{ item.status_baru|status_label }}
+                      {% else %}
+                        {{ item.status_baru|status_label }}
+                      {% endif %}
+                    </div>
+                    <div class="timeline-meta">
+                      {{ item.nama_pengguna or 'Sistem' }}
+                      {% if item.role %} &middot; {{ role_labels.get(item.role, item.role) }}{% endif %}
+                      &middot; {{ item.dibuat_pada|tanggalwaktu }}
+                    </div>
+                    {% if item.catatan %}
+                      <div class="timeline-note">{{ item.catatan }}</div>
+                    {% endif %}
+                  </div>
+                {% else %}
+                  <div class="empty-state">Belum ada riwayat status.</div>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Informasi produk</h2>
+                  <p>Unit yang diklaim.</p>
+                </div>
+                <img class="qr-thumb" src="{{ url_for('qr_gambar', token_qr=klaim.token_qr) }}" alt="QR {{ klaim.nomor_seri }}" width="64" height="64">
+              </div>
+              <div class="info-list">
+                <div class="info-row"><span class="label">Produk</span><span class="value">{{ klaim.nama_produk }}</span></div>
+                <div class="info-row"><span class="label">Kategori</span><span class="value">{{ klaim.kategori_model }}</span></div>
+                <div class="info-row"><span class="label">Nomor seri</span><span class="value"><span class="code">{{ klaim.nomor_seri }}</span></span></div>
+                <div class="info-row"><span class="label">Pembelian</span><span class="value">{{ klaim.tanggal_pembelian|tanggal }}</span></div>
+                <div class="info-row"><span class="label">Invoice</span><span class="value">{{ klaim.nomor_invoice }}</span></div>
+                <div class="info-row"><span class="label">Garansi</span><span class="value">{{ klaim.tanggal_mulai|tanggal }} &ndash; {{ klaim.tanggal_berakhir|tanggal }}</span></div>
+                <div class="info-row"><span class="label">Petugas</span><span class="value">{{ klaim.nama_petugas or 'Belum ditugaskan' }}</span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <div>
+                  <h2>Catatan servis</h2>
+                  <p>Hasil pemeriksaan dan perbaikan.</p>
+                </div>
+              </div>
+              {% for item in catatan_servis %}
+                <div class="notif-item mb-2">
+                  <h3>{{ item.tanggal_proses|tanggal }}</h3>
+                  <p class="small muted mb-1">Oleh {{ item.nama_petugas or 'Petugas' }} &middot; {{ item.dibuat_pada|tanggalwaktu }}</p>
+                  {% if item.hasil_pemeriksaan %}<p><strong>Pemeriksaan:</strong> {{ item.hasil_pemeriksaan }}</p>{% endif %}
+                  {% if item.tindakan_perbaikan %}<p><strong>Perbaikan:</strong> {{ item.tindakan_perbaikan }}</p>{% endif %}
+                  {% if item.komponen_diganti %}<p><strong>Komponen diganti:</strong> {{ item.komponen_diganti }}</p>{% endif %}
+                  {% if item.penggantian_produk %}<p><span class="badge badge-warning">Penggantian produk</span></p>{% endif %}
+                  {% if item.catatan_tambahan %}<p class="mb-0"><strong>Catatan:</strong> {{ item.catatan_tambahan }}</p>{% endif %}
+                </div>
+              {% else %}
+                <div class="empty-state">Belum ada catatan servis.</div>
+              {% endfor %}
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

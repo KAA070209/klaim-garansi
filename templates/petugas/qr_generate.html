@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buat QR Code - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Petugas</div>
+        </div>
+      </div>
+                  <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Petugas</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'petugas_dashboard' }}" href="{{ url_for('petugas_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'kebijakan' in request.endpoint }}" href="{{ url_for('petugas_manage_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_produk') and 'manage' not in request.endpoint }}" href="{{ url_for('petugas_produk') }}"><span class="nav-icon">&#9679;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and (request.endpoint=='petugas_qr' or request.endpoint=='petugas_qr_generate') }}" href="{{ url_for('petugas_qr') }}"><span class="nav-icon">&#9635;</span> QR Code</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'registrasi' in request.endpoint }}" href="{{ url_for('petugas_manage_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'pelanggan' in request.endpoint }}" href="{{ url_for('petugas_manage_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'garansi' in request.endpoint }}" href="{{ url_for('petugas_manage_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_klaim') }}" href="{{ url_for('petugas_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'servis' in request.endpoint }}" href="{{ url_for('petugas_manage_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Buat QR Code</div>
+            <div class="topbar-sub">Generate unit dan token QR secara otomatis</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_qr') }}">Kembali</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Generate unit QR</h1>
+            <p>Nomor seri dan token QR dibuat unik untuk setiap unit.</p>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h2>Form pembuatan QR</h2>
+            <form method="post" action="{{ url_for('petugas_qr_generate') }}">
+              <div class="form-group">
+                <label for="produk_id">Produk</label>
+                <select class="form-select" id="produk_id" name="produk_id" required>
+                  <option value="">Pilih produk aktif</option>
+                  {% for item in produk_list %}
+                    <option value="{{ item.id }}" {{ 'selected' if form.produk_id|string == item.id|string }}>
+                      {{ item.nama_produk }} &middot; {{ item.kategori_model }}
+                    </option>
+                  {% endfor %}
+                </select>
+                {% if not produk_list %}
+                  <span class="form-help">Belum ada produk aktif. Tambahkan produk terlebih dahulu.</span>
+                {% endif %}
+              </div>
+              <div class="form-group">
+                <label for="jumlah">Jumlah unit</label>
+                <input type="number" class="form-control" id="jumlah" name="jumlah"
+                       min="1" max="50" value="{{ form.jumlah }}" required>
+                <span class="form-help">Maksimal 50 unit per proses.</span>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary" {{ 'disabled' if not produk_list }}>Generate QR</button>
+                <a class="btn btn-secondary" href="{{ url_for('petugas_qr') }}">Batal</a>
+              </div>
+            </form>
+          </div>
+
+          <div class="card">
+            <h3>Ketentuan QR Code</h3>
+            <ul class="small muted" style="padding-left: 18px; line-height: 1.9;">
+              <li>Setiap unit memiliki satu nomor seri unik.</li>
+              <li>Setiap unit memiliki satu token QR unik.</li>
+              <li>QR Code mengarah ke halaman publik <span class="code">/qr/&lt;token&gt;</span>.</li>
+              <li>Token tidak menggunakan ID database secara langsung.</li>
+              <li>QR Code dapat dicetak dari daftar unit QR.</li>
+            </ul>
+            <div class="notice mt-2">
+              <strong>Tips:</strong> gunakan jumlah sesuai kebutuhan produksi agar daftar unit tetap mudah dikelola.
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

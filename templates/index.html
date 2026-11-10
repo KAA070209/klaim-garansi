@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VoltShield — Klaim Garansi Elektronik Instan via QR Code</title>
+  <meta name="description" content="VoltShield adalah solusi perlindungan elektronik terpadu. Pindai QR di kardus kemasan, aktivasi garansi otomatis, ajukan klaim, dan pantau status perbaikan secara real-time.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+</head>
+<body class="vs-body">
+
+  {% set dash_url = url_for('admin_dashboard') if g.user and g.user['role'] == 'admin' else (url_for('petugas_dashboard') if g.user and g.user['role'] == 'petugas' else url_for('pelanggan_dashboard')) %}
+
+  <svg class="vs-sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3.2 19 6v5.1c0 4.4-2.9 7.7-7 9.4-4.1-1.7-7-5-7-9.4V6l7-2.8Z"/></symbol>
+    <symbol id="i-shield-check" viewBox="0 0 24 24"><path d="M12 3.2 19 6v5.1c0 4.4-2.9 7.7-7 9.4-4.1-1.7-7-5-7-9.4V6l7-2.8Z"/><path d="m8.8 11.8 2.2 2.2 4.2-4.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4.5 4.5L19 6.5"/></symbol>
+    <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.2 2.6 2.6L16.4 9"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3.5 22 20H2L12 3.5Z"/><path d="M12 9v5M12 17h.01"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-qr" viewBox="0 0 24 24"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3z"/><path d="M14 14h2v2h-2zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><path d="M4 12h15"/><path d="m13 6 6 6-6 6"/></symbol>
+    <symbol id="i-chevron-down" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+    <symbol id="i-chevron-left" viewBox="0 0 24 24"><path d="m14 6-6 6 6 6"/></symbol>
+    <symbol id="i-chevron-right" viewBox="0 0 24 24"><path d="m10 6 6 6-6 6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a12 12 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11 12 4l8 7"/><path d="M6 10v10h12V10"/><path d="M10 20v-5h4v5"/></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17l3 3 5.2-5.2a4 4 0 0 0 5.3-5.3l-2.4 2.4-2-2 2.4-2.4Z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .6-8A6 6 0 0 0 6 9.5 4.2 4.2 0 0 0 7 18Z"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M3 7.5 12 3l9 4.5v9L12 21l-9-4.5v-9Z"/><path d="M3 7.5 12 12l9-4.5M12 12v9"/></symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z"/><path d="M19 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8.8-2.2Z"/></symbol>
+    <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4 6.1 20.5l1.2-6.5L2.5 9.4l6.6-.9 2.9-6Z"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+    <symbol id="i-award" viewBox="0 0 24 24"><circle cx="12" cy="9" r="5"/><path d="m8.5 13.5-1 7 4.5-2.5 4.5 2.5-1-7"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24"><path d="M13 2 4.5 13H11l-1 9L19.5 11H13V2Z"/></symbol>
+    <symbol id="i-wind" viewBox="0 0 24 24"><path d="M3 8h11a3 3 0 1 0-3-3"/><path d="M3 12h15a3 3 0 1 1-3 3"/><path d="M3 16h8"/></symbol>
+    <symbol id="i-tv" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="12" rx="2"/><path d="M8 21h8M12 17v4"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24"><rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 10v4M6 10h6"/></symbol>
+    <symbol id="i-network" viewBox="0 0 24 24"><rect x="3" y="14" width="18" height="6" rx="1.5"/><path d="M6 17h.01M9 17h.01M12 17h.01"/><path d="M7 14V9a5 5 0 0 1 10 0v5"/></symbol>
+    <symbol id="i-map-pin" viewBox="0 0 24 24"><path d="M12 21s7-5.5 7-11a7 7 0 1 0-14 0c0 5.5 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4M9 13h6M9 17h6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 13.5-6L20 10"/><path d="M20 4v6h-6"/><path d="M20 11a8 8 0 0 1-13.5 6L4 14"/><path d="M4 20v-6h6"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  </svg>
+
+  <div class="vs-landing">
+
+    <!-- Utility bar -->
+    <div class="vs-topbar">
+      <div class="vs-topbar-inner">
+        <a class="vs-topbar-brand" href="{{ url_for('index') }}">
+          <span class="vs-topbar-logo"><svg class="vs-i"><use href="#i-shield"></use></svg></span>
+          <strong>VoltShield</strong>
+          <span class="vs-topbar-tagline">Solusi Perlindungan Elektronik Terpadu</span>
+        </a>
+
+        <nav class="vs-topbar-nav" aria-label="Navigasi utilitas">
+          <a class="vs-optional" href="#tentang">Tentang Kami</a>
+          <a class="vs-optional" href="#produk">Sistem Proteksi</a>
+          <a class="vs-optional" href="#faq">Dukungan</a>
+          <a class="vs-optional" href="#testimoni">Blog</a>
+          <a href="{{ url_for('register') }}">Registrasi QR Produk</a>
+          <a class="is-highlight" href="#cek-garansi">Cek &amp; Daftar Klaim</a>
+          <a href="#cara-kerja">Panduan QR</a>
+          <a href="#cek-garansi">Lacak Status</a>
+          {% if g.user %}
+            <a href="{{ dash_url }}">Dashboard Saya</a>
+          {% else %}
+            <a href="{{ url_for('login') }}">Portal Layanan</a>
+          {% endif %}
+        </nav>
+
+        <div class="vs-topbar-meta">
+          <a class="vs-topbar-support" href="tel:02150001234">
+            <svg class="vs-i"><use href="#i-phone"></use></svg>
+            <span>Pusat Bantuan</span>
+            <strong>(021) 5000-1234</strong>
+          </a>
+          {% if g.user %}
+            <a class="vs-topbar-user" href="{{ dash_url }}">
+              <span class="vs-avatar vs-avatar-sm">{{ (g.user['nama'] or 'VS')[:2]|upper }}</span>
+              <span>Selamat datang, <strong>{{ g.user['nama'].split()[0] }}</strong></span>
+            </a>
+          {% else %}
+            <a class="vs-topbar-user" href="{{ url_for('login') }}">
+              <span class="vs-avatar vs-avatar-sm">VS</span>
+              <span>Selamat datang, <strong>Pelanggan</strong></span>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Main navigation -->
+    <header class="vs-header" id="vsHeader">
+      <div class="vs-container vs-header-inner">
+        <a class="vs-logo" href="{{ url_for('index') }}" aria-label="VoltShield Beranda">
+          <span class="vs-logo-mark"><svg class="vs-i"><use href="#i-shield"></use></svg></span>
+          <span class="vs-logo-text">Volt<span>Shield</span><small>WARRANTY SYSTEM</small></span>
+        </a>
+
+        <nav class="vs-nav" id="vsNav" aria-label="Navigasi utama">
+          <a class="is-current" href="{{ url_for('index') }}">Beranda</a>
+          <a href="#produk">Produk</a>
+          <a href="#kebijakan">Kebijakan Garansi</a>
+          <a class="vs-nav-pill" href="#cek-garansi">Klaim &amp; Garansi</a>
+          <a href="#tentang">Tentang Kami</a>
+          <a href="#faq">Bantuan</a>
+
+          <div class="vs-nav-auth">
+            {% if g.user %}
+              <a class="vs-btn vs-btn-primary" href="{{ dash_url }}">Dashboard Saya</a>
+              <a class="vs-btn vs-btn-outline" href="{{ url_for('logout') }}">Keluar</a>
+            {% else %}
+              <a class="vs-btn vs-btn-outline" href="{{ url_for('login') }}">Masuk</a>
+              <a class="vs-btn vs-btn-primary" href="{{ url_for('register') }}">Daftar</a>
+            {% endif %}
+          </div>
+        </nav>
+
+        <div class="vs-header-actions">
+          <div class="vs-social-proof">
+            <div class="vs-mini-avatars" aria-hidden="true">
+              <span class="vs-avatar vs-avatar-xs vs-avatar-a">HN</span>
+              <span class="vs-avatar vs-avatar-xs vs-avatar-b">RA</span>
+              <span class="vs-avatar vs-avatar-xs vs-avatar-c">EP</span>
+            </div>
+            <div class="vs-social-copy">
+              <strong>{{ statistik.pelanggan_format }}</strong>
+              <span>pelanggan</span>
+            </div>
+            <div class="vs-rating">
+              <span class="vs-rating-stars" aria-label="Rating 4.9 dari 5">
+                <svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg>
+              </span>
+              <strong>4.9/5</strong>
+            </div>
+          </div>
+
+          <div class="vs-auth">
+            {% if g.user %}
+              <a class="vs-btn vs-btn-primary vs-btn-sm" href="{{ dash_url }}">
+                <svg class="vs-i"><use href="#i-user"></use></svg>
+                Dashboard
+              </a>
+              <a class="vs-btn vs-btn-outline vs-btn-sm" href="{{ url_for('logout') }}">Keluar</a>
+            {% else %}
+              <a class="vs-btn vs-btn-outline vs-btn-sm" href="{{ url_for('login') }}">Masuk</a>
+              <a class="vs-btn vs-btn-primary vs-btn-sm" href="{{ url_for('register') }}">Daftar</a>
+            {% endif %}
+          </div>
+
+          <button class="vs-burger" id="vsBurger" type="button" aria-label="Buka menu" aria-expanded="false" aria-controls="vsNav">
+            <svg class="vs-i vs-burger-open"><use href="#i-menu"></use></svg>
+            <svg class="vs-i vs-burger-close"><use href="#i-close"></use></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Announcement ticker -->
+    <div class="vs-ticker" aria-label="Pengumuman">
+      <div class="vs-container vs-ticker-inner">
+        <button class="vs-ticker-btn" type="button" id="vsTickerPrev" aria-label="Pengumuman sebelumnya">
+          <svg class="vs-i"><use href="#i-chevron-left"></use></svg>
+        </button>
+        <div class="vs-ticker-track">
+          <span class="vs-ticker-item is-active">Inovasi Garansi Digital: Berlaku Sepanjang Tahun</span>
+          <span class="vs-ticker-item">Registrasi QR Produk Hanya 5 Detik, Tanpa Nota Fisik</span>
+          {% for kebijakan in kebijakan_aktif %}
+            <span class="vs-ticker-item">{{ kebijakan.nama }} · Perlindungan {{ kebijakan.durasi_bulan }} Bulan Resmi VoltShield</span>
+          {% endfor %}
+          <span class="vs-ticker-item">Layanan Home Service Tersedia di 28 Kota Besar Indonesia</span>
+        </div>
+        <button class="vs-ticker-btn" type="button" id="vsTickerNext" aria-label="Pengumuman berikutnya">
+          <svg class="vs-i"><use href="#i-chevron-right"></use></svg>
+        </button>
+      </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="vs-container vs-flash">
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }} vs-flash-item">
+              <span>{{ message }}</span>
+              <button type="button" class="vs-flash-close" aria-label="Tutup">&times;</button>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <main>
+      <!-- HERO -->
+      <section class="vs-hero">
+        <div class="vs-hero-orb vs-hero-orb-a" aria-hidden="true"></div>
+        <div class="vs-hero-orb vs-hero-orb-b" aria-hidden="true"></div>
+        <div class="vs-container vs-hero-inner">
+          <div class="vs-hero-copy">
+            <span class="vs-eyebrow">
+              <svg class="vs-i"><use href="#i-zap"></use></svg>
+              Inovasi Garansi Digital Berbasis Teknologi
+            </span>
+
+            <h1><span class="vs-highlight">Klaim Garansi</span> Elektronik Instan Cukup Pindai QR di Kardus Kemasan</h1>
+
+            <p class="vs-hero-lead">
+              Solusi garansi resmi VoltShield tanpa nota fisik. Pindai QR di kardus kemasan untuk aktivasi
+              otomatis, cek status garansi, dan ajukan klaim tanpa antre. Semua tercatat digital sejak hari pertama.
+            </p>
+
+            <div class="vs-hero-actions">
+              <a class="vs-btn vs-btn-primary vs-btn-lg" href="#cek-garansi">
+                <svg class="vs-i"><use href="#i-qr"></use></svg>
+                Pindai QR &amp; Mulai Klaim
+              </a>
+              <a class="vs-btn vs-btn-outline vs-btn-lg" href="#cek-garansi">
+                <svg class="vs-i"><use href="#i-search"></use></svg>
+                Cek Status &amp; Simulasi Klaim
+              </a>
+            </div>
+
+            <div class="vs-hero-trust">
+              <div class="vs-hero-trust-item">
+                <strong>{{ statistik.unit_qr_format }}</strong>
+                <span>Produk Terlindungi</span>
+              </div>
+              <div class="vs-hero-trust-item">
+                <strong>{{ statistik.persen_klaim }}%</strong>
+                <span>Klaim Disetujui</span>
+              </div>
+            </div>
+
+            <div class="vs-hero-features">
+              <div class="vs-hero-feature"><svg class="vs-i"><use href="#i-shield-check"></use></svg>100% Sadar Teknologi</div>
+              <div class="vs-hero-feature"><svg class="vs-i"><use href="#i-award"></use></svg>ISO 9001 Tersertifikasi</div>
+              <div class="vs-hero-feature"><svg class="vs-i"><use href="#i-check-circle"></use></svg>Authorized Reseller</div>
+              <div class="vs-hero-feature"><svg class="vs-i"><use href="#i-clock"></use></svg>Respons 1–6 Jam</div>
+            </div>
+          </div>
+
+          <div class="vs-hero-visual">
+            <div class="vs-hero-glow" aria-hidden="true"></div>
+            <article class="vs-product-card">
+              <div class="vs-product-card-head">
+                <span class="vs-tag-green">
+                  <svg class="vs-i"><use href="#i-check"></use></svg>
+                  Official Box Tag #1:5841-9204
+                </span>
+                <span class="vs-chip">Kemasan Asli</span>
+              </div>
+
+              <div class="vs-box-stage">
+                <svg class="vs-box-art" viewBox="0 0 340 300" role="img" aria-label="Kardus produk VoltShield dengan label QR garansi">
+                  <defs>
+                    <linearGradient id="boxTopGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#f5e2c2"/>
+                      <stop offset="1" stop-color="#e4c695"/>
+                    </linearGradient>
+                    <linearGradient id="boxFrontGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#e9cfa5"/>
+                      <stop offset="1" stop-color="#d5b27c"/>
+                    </linearGradient>
+                    <linearGradient id="boxSideGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#cfa86f"/>
+                      <stop offset="1" stop-color="#b98d55"/>
+                    </linearGradient>
+                  </defs>
+                  <ellipse cx="170" cy="279" rx="118" ry="14" fill="#173c64" opacity="0.12"/>
+                  <path d="M60 106 110 62h200l-50 44Z" fill="url(#boxTopGrad)"/>
+                  <path d="M60 106h200v167H60Z" fill="url(#boxFrontGrad)"/>
+                  <path d="M260 106l50-44v167l-50 44Z" fill="url(#boxSideGrad)"/>
+                  <path d="M60 106h200v8H60Z" fill="#b98d55" opacity=".55"/>
+                  <path d="M258 106h4v167h-4Z" fill="#9d7644" opacity=".35"/>
+                  <path d="M60 190h200" stroke="#b98d55" stroke-opacity=".28" stroke-width="2"/>
+
+                  <g transform="translate(81 124)">
+                    <rect width="158" height="128" rx="7" fill="#fffdf8" stroke="#d8c3a1"/>
+                    <rect x="8" y="8" width="142" height="20" rx="3" fill="#0b2340"/>
+                    <text x="79" y="22" text-anchor="middle" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="8.5" font-weight="800" letter-spacing="1.4" fill="#ffffff">VOLTSHIELD</text>
+                    <g transform="translate(34 38)">
+                      <rect width="90" height="60" rx="3" fill="#ffffff"/>
+                      <g fill="#0b2340">
+                        {%- for y in range(1, 59) -%}
+                          {%- for x in range(1, 89) -%}
+                            {%- set finder = (x < 17 and y < 17) or (x > 72 and y < 17) or (x < 17 and y > 42) -%}
+                            {%- if not finder and ((x * 3 + y * 5 + x * y) % 7) < 3 -%}
+                              <rect x="{{ x }}" y="{{ y }}" width="1" height="1"/>
+                            {%- endif -%}
+                          {%- endfor -%}
+                        {%- endfor -%}
+                        <rect x="1" y="1" width="15" height="15"/><rect x="3" y="3" width="11" height="11" fill="#ffffff"/><rect x="5" y="5" width="7" height="7"/>
+                        <rect x="74" y="1" width="15" height="15"/><rect x="76" y="3" width="11" height="11" fill="#ffffff"/><rect x="78" y="5" width="7" height="7"/>
+                        <rect x="1" y="44" width="15" height="15"/><rect x="3" y="46" width="11" height="11" fill="#ffffff"/><rect x="5" y="48" width="7" height="7"/>
+                      </g>
+                      <path d="M-4 16V-4h20M74-4h20v20M-4 44v20h20M74 64h20V44" fill="none" stroke="#16a06a" stroke-width="2.4" stroke-linecap="round"/>
+                    </g>
+                    <text x="79" y="111" text-anchor="middle" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="7.5" font-weight="800" letter-spacing="1" fill="#0b2340">{{ (produk_unggulan.nama_produk|upper)[:18] }}</text>
+                    <text x="79" y="121" text-anchor="middle" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="5.5" font-weight="600" letter-spacing=".8" fill="#7b8ca0">OFFICIAL QR WARRANTY</text>
+                  </g>
+
+                  <path d="M104 74h48v10h-48z" fill="#d5b27c" opacity=".7"/>
+                  <path d="M210 68h70v8h-70z" fill="#c9a26a" opacity=".8"/>
+                </svg>
+
+                <span class="vs-float-chip vs-float-1">
+                  <svg class="vs-i"><use href="#i-lock"></use></svg>
+                  Zero Nota Fisik
+                </span>
+                <span class="vs-float-chip vs-float-2">
+                  <svg class="vs-i"><use href="#i-zap"></use></svg>
+                  Registrasi Akurat &amp; Cepat
+                </span>
+              </div>
+
+              <div class="vs-card-meta">
+                <div class="vs-card-meta-item">
+                  <span>Unit Terdaftar</span>
+                  <strong>{{ statistik.unit_terdaftar_format }} Unit</strong>
+                </div>
+                <div class="vs-card-meta-item">
+                  <span>Pabrik</span>
+                  <strong>PT VoltShield Indonesia</strong>
+                </div>
+              </div>
+
+              <div class="vs-product-row">
+                <div class="vs-product-thumb" aria-hidden="true">
+                  <svg viewBox="0 0 300 180">
+                    <rect x="48" y="48" width="204" height="66" rx="12" fill="#f8fbff" stroke="#cad9ea" stroke-width="2"/>
+                    <text x="64" y="72" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="14" font-weight="800" fill="#1f55d6">VoltShield</text>
+                    <rect x="64" y="84" width="172" height="7" rx="3.5" fill="#dce7f3"/>
+                    <rect x="64" y="96" width="126" height="4" rx="2" fill="#e8eff8"/>
+                    <circle cx="232" cy="62" r="4" fill="#16a06a"/>
+                    <path d="M78 126c10 12 26 12 36 0M126 126c10 12 26 12 36 0M174 126c10 12 26 12 36 0" fill="none" stroke="#9dc4f8" stroke-width="3" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="vs-product-info">
+                  <strong>{{ produk_unggulan.nama_produk }}</strong>
+                  <span>{{ '%02d'|format(produk_unggulan.durasi_bulan) }} Bulan Garansi · {{ produk_unggulan.kategori_model }}</span>
+                </div>
+                <div class="vs-product-price">
+                  <strong>{{ produk_unggulan.durasi_bulan }} Bulan</strong>
+                  <span>{{ produk_unggulan.nama_kebijakan }}</span>
+                  <span>Garansi Resmi VoltShield</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- CEK GARANSI -->
+      <section class="vs-section vs-check" id="cek-garansi">
+        <div class="vs-container">
+          <div class="vs-section-head">
+            <span class="vs-kicker">Cek Instan Tanpa Registrasi Akun</span>
+            <h2>Periksa Status Garansi &amp; Riwayat Klaim Anda</h2>
+            <p>Masukkan nomor seri pada kardus atau pindai QR untuk melihat status unit secara langsung.</p>
+          </div>
+
+          <div class="vs-check-card">
+            <div class="vs-check-tabs" role="tablist" aria-label="Metode pengecekan garansi">
+              <button class="vs-check-tab is-active" type="button" role="tab" aria-selected="true" data-vs-tab="manual">
+                <svg class="vs-i"><use href="#i-qr"></use></svg>
+                Input Manual Nomor Seri
+              </button>
+              <button class="vs-check-tab" type="button" role="tab" aria-selected="false" data-vs-tab="kamera">
+                <svg class="vs-i"><use href="#i-camera"></use></svg>
+                Buka Kamera / Pindai QR
+              </button>
+            </div>
+
+            <div class="vs-check-panel is-active" data-vs-panel="manual">
+              <form id="landingScanForm" class="vs-check-form" method="post" action="{{ url_for('cek_garansi') }}">
+                <div class="vs-input-wrap">
+                  <svg class="vs-i"><use href="#i-qr"></use></svg>
+                  <input class="vs-input" type="text" id="qrTokenInput" name="token_qr" placeholder="Contoh: PRD001-DEMO-0001" autocomplete="off" spellcheck="false" aria-label="Nomor seri atau token QR" required>
+                </div>
+                <button class="vs-btn vs-btn-primary" type="submit">
+                  <svg class="vs-i"><use href="#i-search"></use></svg>
+                  Cek Garansi Sekarang
+                </button>
+              </form>
+              <p class="vs-check-note">
+                <svg class="vs-i"><use href="#i-info"></use></svg>
+                Cek langsung lewat nomor seri pada kemasan. {{ statistik.kebijakan_format }} kebijakan garansi aktif tersinkron otomatis dengan sistem VoltShield.
+              </p>
+            </div>
+
+            <div class="vs-check-panel" data-vs-panel="kamera">
+              <div class="vs-camera-placeholder">
+                <div class="vs-camera-frame">
+                  <svg class="vs-i"><use href="#i-qr"></use></svg>
+                  <span>Arahkan kamera ke QR code pada kardus kemasan</span>
+                </div>
+                <a class="vs-btn vs-btn-primary" href="{{ url_for('pelanggan_scan') }}">
+                  <svg class="vs-i"><use href="#i-camera"></use></svg>
+                  Buka Scanner Kamera
+                </a>
+              </div>
+            </div>
+
+            <div class="vs-check-divider"></div>
+
+            <div class="vs-result">
+              <div class="vs-result-top">
+                <div>
+                  <span class="vs-status-live"><span class="vs-dot"></span>Unit Terverifikasi &amp; Aktif</span>
+                  <div class="vs-result-product">
+                    <svg class="vs-i"><use href="#i-shield-check"></use></svg>
+                    PT VoltShield Smart Air Conditioner 1.5PK Pro
+                  </div>
+                </div>
+                <span class="vs-badge-active">Status Garansi Aktif</span>
+              </div>
+
+              <div class="vs-result-main">
+                <div class="vs-result-grid">
+                  <div class="vs-result-item">
+                    <span>Nomor Seri</span>
+                    <strong>VLT-88410-KAC</strong>
+                  </div>
+                  <div class="vs-result-item">
+                    <span>Tanggal Pembelian</span>
+                    <strong>17 Agustus 2024</strong>
+                  </div>
+                  <div class="vs-result-item">
+                    <span>Tempat Pembelian</span>
+                    <strong>Toko Elektronik Central Jakarta</strong>
+                  </div>
+                  <div class="vs-result-item">
+                    <span>Masa Garansi</span>
+                    <strong>36 Bulan</strong>
+                  </div>
+                </div>
+
+                <div class="vs-result-side">
+                  <span class="vs-result-side-label">Aktif Hingga 2027</span>
+                  <span class="vs-result-side-note">± 9 bulan lagi</span>
+                  <div class="vs-progress"><span style="width: 76%"></span></div>
+                  <a class="vs-result-link" href="{{ url_for('register') }}">Registrasi Garansi <svg class="vs-i"><use href="#i-arrow-right"></use></svg></a>
+                </div>
+              </div>
+
+              <p class="vs-result-foot">
+                <svg class="vs-i"><use href="#i-info"></use></svg>
+                Contoh pratinjau hasil. Masukkan nomor seri asli dari kemasan untuk melihat data garansi unit Anda yang tersimpan di sistem.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PERBANDINGAN -->
+      <section class="vs-section vs-compare" id="tentang">
+        <span class="vs-anchor" id="kebijakan" aria-hidden="true"></span>
+        <div class="vs-container">
+          <div class="vs-section-head">
+            <span class="vs-kicker">Transformasi dari Garansi Konvensional</span>
+            <h2>Selamat Tinggal Masalah Klaim Tradisional yang Melelahkan</h2>
+            <p>Dulu, mengurus klaim garansi berarti berkutat dengan kertas, antrean panjang, dan prosedur berbelit. Kini semua serba digital, transparan, dan bisa dipantau dari mana saja.</p>
+          </div>
+
+          <div class="vs-compare-grid">
+            <article class="vs-compare-card vs-compare-bad">
+              <div class="vs-compare-head">
+                <span class="vs-compare-icon"><svg class="vs-i"><use href="#i-alert"></use></svg></span>
+                <div>
+                  <h3>Masalah Garansi Kertas Lama</h3>
+                  <p>Ribet, rawan, dan bikin kecewa</p>
+                </div>
+              </div>
+
+              <div class="vs-compare-list">
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon bad"><svg class="vs-i"><use href="#i-x"></use></svg></span>
+                  <div><strong>Struk Pembelian Hilang atau Pudar</strong><p>Nota kertas sering rusak dimakan usia, membuat klaim ditolak.</p></div>
+                </div>
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon bad"><svg class="vs-i"><use href="#i-x"></use></svg></span>
+                  <div><strong>Waktu Antrean &amp; Service Center</strong><p>Harus datang ke service center, antre lama, dan menunggu berhari-hari.</p></div>
+                </div>
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon bad"><svg class="vs-i"><use href="#i-x"></use></svg></span>
+                  <div><strong>Bukti Sparepart Non-Original / Tiada</strong><p>Suku cadang tidak jelas asal-usulnya, berisiko merusak perangkat.</p></div>
+                </div>
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon bad"><svg class="vs-i"><use href="#i-x"></use></svg></span>
+                  <div><strong>Klaim Tertentu Tanpa Kepastian</strong><p>Proses klaim tidak transparan dan keputusan cenderung sepihak.</p></div>
+                </div>
+              </div>
+
+              <div class="vs-compare-foot">
+                <svg class="vs-i"><use href="#i-info"></use></svg>
+                Banyak keluhan pelanggan gara-gara nota hilang dan prosedur berbelit. VoltShield hadir untuk mengakhiri itu semua.
+              </div>
+            </article>
+
+            <article class="vs-compare-card vs-compare-good">
+              <div class="vs-compare-head">
+                <span class="vs-compare-icon"><svg class="vs-i"><use href="#i-shield-check"></use></svg></span>
+                <div>
+                  <h3>Solusi VoltShield QR Box</h3>
+                  <p>100% Digital, Terpercaya &amp; Mudah</p>
+                </div>
+              </div>
+
+              <div class="vs-compare-list">
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon good"><svg class="vs-i"><use href="#i-check"></use></svg></span>
+                  <div><strong>Data Permanen Tersimpan Cloud</strong><p>Riwayat pembelian dan garansi tetap aman meski nota fisik hilang, bisa diakses kapan saja.</p></div>
+                </div>
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon good"><svg class="vs-i"><use href="#i-check"></use></svg></span>
+                  <div><strong>Layanan Home Service &amp; Antrian Digital</strong><p>Teknisi datang ke rumah, penjadwalan cepat tanpa antre panjang di service center.</p></div>
+                </div>
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon good"><svg class="vs-i"><use href="#i-check"></use></svg></span>
+                  <div><strong>300+ Suku Cadang Original</strong><p>Komponen resmi dengan harga transparan dan kualitas terjamin.</p></div>
+                </div>
+                <div class="vs-compare-item">
+                  <span class="vs-list-icon good"><svg class="vs-i"><use href="#i-check"></use></svg></span>
+                  <div><strong>Live Tracking Perbaikan</strong><p>Pantau status klaim dan perbaikan secara real-time dari dashboard.</p></div>
+                </div>
+              </div>
+
+              <div class="vs-compare-foot">
+                <svg class="vs-i"><use href="#i-check-circle"></use></svg>
+                Praktis, aman, dan gratis! Tidak perlu bayar biaya tambahan.
+              </div>
+              <a class="vs-inline-link" href="#cara-kerja">
+                Pelajari solusi dan garansi QR ini lebih lanjut
+                <svg class="vs-i"><use href="#i-arrow-right"></use></svg>
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- LANGKAH -->
+      <section class="vs-section vs-steps" id="cara-kerja">
+        <div class="vs-container">
+          <div class="vs-section-head">
+            <span class="vs-kicker">Alur Proses Cepat</span>
+            <h2>4 Langkah Mudah Klaim Garansi via QR Dus</h2>
+            <p>Dari kardus kemasan sampai teknisi datang, semuanya bisa dilakukan dari ponsel tanpa ribet.</p>
+          </div>
+
+          <div class="vs-steps-grid">
+            <article class="vs-step-card">
+              <span class="vs-step-num">01</span>
+              <span class="vs-step-icon"><svg class="vs-i"><use href="#i-qr"></use></svg></span>
+              <h3>Pindai QR Kardus</h3>
+              <p>Temukan tag atau segel QR di kardus kemasan, lalu pindai dengan kamera ponsel. Sistem langsung mengenali unit Anda.</p>
+              <div class="vs-step-badge"><svg class="vs-i"><use href="#i-clock"></use></svg>Validasi (5 Detik)</div>
+            </article>
+
+            <article class="vs-step-card">
+              <span class="vs-step-num">02</span>
+              <span class="vs-step-icon"><svg class="vs-i"><use href="#i-sparkles"></use></svg></span>
+              <h3>Validasi AI Klaim</h3>
+              <p>Sistem mencocokkan nomor seri dengan database cloud untuk memastikan unit asli, aktif, dan masih dalam masa garansi.</p>
+              <div class="vs-step-badge"><svg class="vs-i"><use href="#i-check-circle"></use></svg>Terverifikasi Otomatis</div>
+            </article>
+
+            <article class="vs-step-card">
+              <span class="vs-step-num">03</span>
+              <span class="vs-step-icon"><svg class="vs-i"><use href="#i-home"></use></svg></span>
+              <h3>Pilih Metode Servis</h3>
+              <p>Jadwalkan kunjungan teknisi atau antar unit ke authorized center terdekat. Pilih yang paling nyaman untuk Anda.</p>
+              <div class="vs-step-badge"><svg class="vs-i"><use href="#i-map-pin"></use></svg>Home / Drop Off</div>
+            </article>
+
+            <article class="vs-step-card">
+              <span class="vs-step-num">04</span>
+              <span class="vs-step-icon"><svg class="vs-i"><use href="#i-wrench"></use></svg></span>
+              <h3>Perbaikan Tuntas</h3>
+              <p>Teknisi berpengalaman menangani perbaikan dengan suku cadang original. Pantau progres hingga unit kembali normal.</p>
+              <div class="vs-step-badge"><svg class="vs-i"><use href="#i-shield-check"></use></svg>Garansi Servis Tambahan 90 Hari</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRODUK -->
+      <section class="vs-section vs-products" id="produk">
+        <div class="vs-container">
+          <div class="vs-products-head">
+            <div class="vs-section-head">
+              <span class="vs-kicker">Kategori Produk Unggulan</span>
+              <h2>Kategori Produk Elektronik Resmi</h2>
+              <p>Semua produk VoltShield dilindungi garansi resmi dengan penggantian suku cadang hingga 5 tahun.</p>
+            </div>
+            {% if g.user and g.user['role'] == 'admin' %}
+              {% set katalog_url = url_for('admin_produk') %}
+            {% elif g.user and g.user['role'] == 'petugas' %}
+              {% set katalog_url = url_for('petugas_produk') %}
+            {% elif g.user %}
+              {% set katalog_url = url_for('pelanggan_produk') %}
+            {% else %}
+              {% set katalog_url = url_for('login', next=url_for('pelanggan_produk')) %}
+            {% endif %}
+            <a class="vs-link-arrow" href="{{ katalog_url }}">
+              Lihat Semua Katalog Produk
+              <svg class="vs-i"><use href="#i-arrow-right"></use></svg>
+            </a>
+          </div>
+
+          {% if kategori_produk %}
+            <div class="vs-cat-chips" aria-label="Kategori produk terdaftar di sistem">
+              <span class="vs-cat-chips-label">Data kategori dari sistem:</span>
+              {% for kategori in kategori_produk %}
+                <span class="vs-cat-chip">
+                  <svg class="vs-i"><use href="#i-box"></use></svg>
+                  {{ kategori.kategori }}
+                  <b>{{ kategori.jumlah }}</b>
+                </span>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="vs-products-grid">
+            <article class="vs-product-tile">
+              <div class="vs-tile-media bg-mint">
+                <span class="vs-tile-tag amber">Terpopuler</span>
+                <svg viewBox="0 0 300 180" role="img" aria-label="AC Inverter">
+                  <ellipse cx="150" cy="158" rx="108" ry="9" fill="#7ea58d" opacity=".18"/>
+                  <rect x="38" y="36" width="224" height="78" rx="14" fill="#ffffff" stroke="#c9dce8" stroke-width="2"/>
+                  <text x="54" y="64" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="15" font-weight="800" fill="#1f55d6">VoltShield</text>
+                  <circle cx="238" cy="57" r="4.5" fill="#16a06a"/>
+                  <rect x="54" y="80" width="192" height="7" rx="3.5" fill="#dce8f2"/>
+                  <rect x="54" y="93" width="148" height="4" rx="2" fill="#eaf1f7"/>
+                  <path d="M72 128c10 13 26 13 36 0M120 128c10 13 26 13 36 0M168 128c10 13 26 13 36 0" fill="none" stroke="#84b6f7" stroke-width="3.4" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="vs-tile-body">
+                <div class="vs-tile-title"><svg class="vs-i"><use href="#i-wind"></use></svg>Pendingin Udara (AC Inverter)</div>
+                <div class="vs-tile-meta"><span>• Penggantian Kompresor</span><span>• Cover 5 Tahun</span></div>
+              </div>
+            </article>
+
+            <article class="vs-product-tile">
+              <div class="vs-tile-media bg-lilac">
+                <span class="vs-tile-tag purple">Paling Laris</span>
+                <svg viewBox="0 0 300 180" role="img" aria-label="Smart TV dan sound system">
+                  <defs>
+                    <linearGradient id="tvScreen" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#122a58"/>
+                      <stop offset=".55" stop-color="#1d4f9c"/>
+                      <stop offset="1" stop-color="#43b6d8"/>
+                    </linearGradient>
+                  </defs>
+                  <ellipse cx="150" cy="167" rx="104" ry="8" fill="#7b6e9e" opacity=".16"/>
+                  <rect x="38" y="20" width="224" height="122" rx="8" fill="#111b2e"/>
+                  <rect x="45" y="27" width="210" height="108" rx="5" fill="url(#tvScreen)"/>
+                  <circle cx="186" cy="55" r="15" fill="#f8d581" opacity=".8"/>
+                  <path d="M45 105c28-22 45-7 68-22s38 6 58-8 42 4 84-14v74H45Z" fill="#0e2a55" opacity=".55"/>
+                  <path d="M45 119c30-16 52-2 74-12s35 5 60-4 38 4 76-8v40H45Z" fill="#0b1d3b" opacity=".7"/>
+                  <rect x="96" y="142" width="108" height="6" rx="3" fill="#26354c"/>
+                  <rect x="126" y="148" width="48" height="4" rx="2" fill="#3c4d66"/>
+                  <rect x="94" y="155" width="112" height="11" rx="5.5" fill="#1a263c"/>
+                  <circle cx="200" cy="160.5" r="2" fill="#5f7697"/>
+                </svg>
+              </div>
+              <div class="vs-tile-body">
+                <div class="vs-tile-title"><svg class="vs-i"><use href="#i-tv"></use></svg>Smart TV &amp; Sound System</div>
+                <div class="vs-tile-meta"><span>• Garansi Panel 5 Tahun</span><span>• Home Service</span></div>
+              </div>
+            </article>
+
+            <article class="vs-product-tile">
+              <div class="vs-tile-media bg-sky">
+                <span class="vs-tile-tag blue">Stok Tersedia</span>
+                <svg viewBox="0 0 300 180" role="img" aria-label="UPS dan surge protector">
+                  <ellipse cx="150" cy="164" rx="96" ry="9" fill="#5d7fa6" opacity=".16"/>
+                  <rect x="97" y="30" width="98" height="130" rx="9" fill="#f9fcff" stroke="#c7d8e9" stroke-width="2"/>
+                  <rect x="105" y="39" width="82" height="34" rx="4" fill="#1b2d47"/>
+                  <text x="146" y="55" text-anchor="middle" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="10" font-weight="800" fill="#4fd69c">100%</text>
+                  <text x="146" y="65" text-anchor="middle" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="5.5" font-weight="700" letter-spacing=".7" fill="#8fb0d1">PURE SINE WAVE</text>
+                  <rect x="105" y="80" width="82" height="30" rx="4" fill="#edf4fb"/>
+                  <circle cx="121" cy="95" r="7" fill="none" stroke="#1f55d6" stroke-width="2"/>
+                  <path d="M121 90v5l3 2" fill="none" stroke="#1f55d6" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="171" cy="90" r="3" fill="#16a06a"/>
+                  <rect x="154" y="86" width="8" height="8" rx="2" fill="#c9d8e8"/>
+                  <rect x="181" y="86" width="6" height="8" rx="1" fill="#c9d8e8"/>
+                  <rect x="105" y="118" width="82" height="30" rx="4" fill="#e7eff8" stroke="#d4e1ee"/>
+                  <rect x="112" y="125" width="14" height="13" rx="2" fill="#ffffff"/>
+                  <rect x="131" y="125" width="14" height="13" rx="2" fill="#ffffff"/>
+                  <rect x="150" y="125" width="14" height="13" rx="2" fill="#ffffff"/>
+                  <rect x="169" y="125" width="11" height="13" rx="2" fill="#ffffff"/>
+                  <path d="M200 58c16-7 23-20 21-31M200 58c18 2 26-6 30-15" fill="none" stroke="#9ab3ca" stroke-width="2" stroke-linecap="round"/>
+                  <rect x="200" y="62" width="29" height="62" rx="4" fill="#1b2d47"/>
+                  <rect x="206" y="70" width="17" height="5" rx="2.5" fill="#4fd69c" opacity=".8"/>
+                  <circle cx="214.5" cy="88" r="3" fill="#16a06a"/>
+                  <rect x="206" y="99" width="17" height="4" rx="2" fill="#5f7697"/>
+                  <rect x="206" y="107" width="17" height="4" rx="2" fill="#5f7697"/>
+                  <path d="M214 124v17" stroke="#94a9bf" stroke-width="2.5" stroke-linecap="round"/>
+                  <circle cx="146" cy="151" r="2.5" fill="#16a06a"/>
+                </svg>
+              </div>
+              <div class="vs-tile-body">
+                <div class="vs-tile-title"><svg class="vs-i"><use href="#i-battery"></use></svg>Power Management</div>
+                <div class="vs-tile-meta"><span>• UPS &amp; Surge Protector</span><span>• Garansi 5 Tahun</span></div>
+              </div>
+            </article>
+
+            <article class="vs-product-tile">
+              <div class="vs-tile-media bg-peach">
+                <span class="vs-tile-tag amber">Terpopuler</span>
+                <svg viewBox="0 0 300 180" role="img" aria-label="Mesin cuci">
+                  <defs>
+                    <radialGradient id="wmGlass" cx=".35" cy=".3" r=".9">
+                      <stop offset="0" stop-color="#9dd4f8"/>
+                      <stop offset=".55" stop-color="#4c95d6"/>
+                      <stop offset="1" stop-color="#164b87"/>
+                    </radialGradient>
+                  </defs>
+                  <ellipse cx="150" cy="168" rx="90" ry="8" fill="#b98c5d" opacity=".18"/>
+                  <rect x="76" y="18" width="148" height="144" rx="14" fill="#ffffff" stroke="#d4dfea" stroke-width="2"/>
+                  <rect x="76" y="18" width="148" height="38" rx="14" fill="#eef4fb"/>
+                  <circle cx="100" cy="37" r="6" fill="#1f55d6"/>
+                  <circle cx="120" cy="37" r="6" fill="#c3d1e2"/>
+                  <rect x="196" y="30" width="16" height="14" rx="3" fill="#dbe6f1"/>
+                  <circle cx="150" cy="108" r="42" fill="#e3edf7" stroke="#c3d4e7" stroke-width="3"/>
+                  <circle cx="150" cy="108" r="33" fill="url(#wmGlass)"/>
+                  <path d="M120 112c12 10 26-8 38 2s18 8 24-2" fill="none" stroke="#b9e3ff" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+                  <path d="M133 92c8-12 24-12 32 0" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round" opacity=".45"/>
+                  <circle cx="150" cy="108" r="40" fill="none" stroke="#ffffff" stroke-width="2" opacity=".55"/>
+                </svg>
+              </div>
+              <div class="vs-tile-body">
+                <div class="vs-tile-title"><svg class="vs-i"><use href="#i-refresh"></use></svg>Mesin Cuci &amp; Kulkas</div>
+                <div class="vs-tile-meta"><span>• Motor Inverter</span><span>• Garansi 10 Tahun</span></div>
+              </div>
+            </article>
+
+            <article class="vs-product-tile">
+              <div class="vs-tile-media bg-aqua">
+                <span class="vs-tile-tag blue">Stok Tersedia</span>
+                <svg viewBox="0 0 300 180" role="img" aria-label="Perangkat konektivitas dan panel">
+                  <ellipse cx="150" cy="162" rx="112" ry="8" fill="#5a9a91" opacity=".16"/>
+                  <path d="M66 66c-16-8-26-22-26-40" fill="none" stroke="#7e93a9" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M234 66c16-8 26-22 26-40" fill="none" stroke="#7e93a9" stroke-width="3" stroke-linecap="round"/>
+                  <rect x="58" y="58" width="184" height="98" rx="9" fill="#f9fcff" stroke="#c9dbe7" stroke-width="2"/>
+                  <rect x="70" y="70" width="160" height="22" rx="4" fill="#dbe8f2"/>
+                  <text x="78" y="85" font-family="Plus Jakarta Sans, Segoe UI, sans-serif" font-size="9" font-weight="800" letter-spacing="1" fill="#31506c">VOLTSHIELD NETWORK</text>
+                  <circle cx="212" cy="81" r="3" fill="#16a06a"/>
+                  <circle cx="222" cy="81" r="3" fill="#f5b301"/>
+                  {% for i in range(8) %}
+                    <rect x="{{ 70 + i * 20 }}" y="104" width="15" height="15" rx="2" fill="#1b2d47"/>
+                    <rect x="{{ 73 + i * 20 }}" y="108" width="9" height="7" rx="1" fill="#5f7697"/>
+                    <circle cx="{{ 77 + i * 20 }}" cy="124" r="1.8" fill="#16a06a"/>
+                  {% endfor %}
+                  <rect x="70" y="136" width="160" height="8" rx="4" fill="#e6eef6"/>
+                </svg>
+              </div>
+              <div class="vs-tile-body">
+                <div class="vs-tile-title"><svg class="vs-i"><use href="#i-network"></use></svg>Perangkat Konektivitas &amp; Panel</div>
+                <div class="vs-tile-meta"><span>• Router · Switch · Access Point</span><span>• Garansi 1 Tahun</span></div>
+              </div>
+            </article>
+
+            <article class="vs-product-tile vs-tile-cta">
+              <span class="vs-cta-orbit vs-cta-orbit-a" aria-hidden="true"></span>
+              <span class="vs-cta-orbit vs-cta-orbit-b" aria-hidden="true"></span>
+              <div class="vs-tile-cta-content">
+                <span class="vs-kicker">Butuh Bantuan?</span>
+                <h3>Punya Perangkat Lain?</h3>
+                <p>Tim ahli kami siap membantu memilih perlindungan garansi yang tepat untuk perangkat elektronik Anda.</p>
+                <a class="vs-btn" href="#cta">
+                  Hubungi Teknisi VoltShield
+                  <svg class="vs-i"><use href="#i-arrow-right"></use></svg>
+                </a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- STATISTIK -->
+      <section class="vs-stats" aria-label="Statistik VoltShield">
+        <div class="vs-container vs-stats-grid">
+          <div class="vs-stat">
+            <strong>{{ statistik.persen_klaim }}%</strong>
+            <span>Klaim Disetujui</span>
+            <small>dari {{ statistik.klaim_total_format }} pengajuan klaim tercatat</small>
+          </div>
+          <div class="vs-stat">
+            <strong>{{ statistik.unit_qr_format }}</strong>
+            <span>Unit QR Terdaftar</span>
+            <small>{{ statistik.unit_terdaftar_format }} unit sudah diaktivasi pelanggan</small>
+          </div>
+          <div class="vs-stat">
+            <strong>{{ statistik.produk_format }}</strong>
+            <span>Produk Resmi</span>
+            <small>dilindungi {{ statistik.kebijakan_format }} kebijakan garansi aktif</small>
+          </div>
+          <div class="vs-stat">
+            <strong>{{ statistik.pelanggan_format }}</strong>
+            <span>Pelanggan Aktif</span>
+            <small>{{ statistik.garansi_aktif_format }} garansi aktif berjalan hari ini</small>
+          </div>
+        </div>
+      </section>
+
+      <!-- TESTIMONI -->
+      <section class="vs-section vs-testimonials" id="testimoni">
+        <div class="vs-container">
+          <div class="vs-section-head">
+            <span class="vs-kicker">Pengalaman Pengguna</span>
+            <h2>Testimoni Nyata Tanpa Strok Tertipu</h2>
+            <p>Dengarkan pengalaman pengguna VoltShield merasakan kemudahan klaim hingga tuntas.</p>
+          </div>
+
+          <div class="vs-testi-grid">
+            <article class="vs-testi-card">
+              <div class="vs-stars" aria-label="5 dari 5 bintang">
+                <svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg>
+              </div>
+              <p class="vs-testi-quote">“Saya kira garansi hanya klaim nota fisik yang ribet. Ternyata tinggal scan QR di kardus, unit langsung terdaftar, dan teknisi datang ke rumah tanpa biaya tambahan. Proses klaim 3 hari, AC baru langsung terpasang. Luar biasa!”</p>
+              <div class="vs-testi-person">
+                <span class="vs-testi-avatar vs-avatar-a">HN</span>
+                <div>
+                  <strong>Hendra Nugroho</strong>
+                  <span>Teknisi Rumah Tangga, BSD Tangerang</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="vs-testi-card">
+              <div class="vs-stars" aria-label="5 dari 5 bintang">
+                <svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg>
+              </div>
+              <p class="vs-testi-quote">“Sebagai IT infrastructure, saya butuh kepastian garansi perangkat jaringan. Dashboard memantau status klaim jadi sangat transparan. Tim support responsif dan proses penggantian unit cepat.”</p>
+              <div class="vs-testi-person">
+                <span class="vs-testi-avatar vs-avatar-b">RA</span>
+                <div>
+                  <strong>Rian Anggono</strong>
+                  <span>IT Infrastructure Lead, Jakarta Selatan</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="vs-testi-card">
+              <div class="vs-stars" aria-label="5 dari 5 bintang">
+                <svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg><svg class="vs-i"><use href="#i-star"></use></svg>
+              </div>
+              <p class="vs-testi-quote">“Kulkas sempat rusak saat masih garansi. Cukup scan QR, ajukan klaim, dan dalam 4 hari teknisi datang. Prosesnya rapi, tanpa bolak-balik service center. VoltShield memang beda.”</p>
+              <div class="vs-testi-person">
+                <span class="vs-testi-avatar vs-avatar-c">EP</span>
+                <div>
+                  <strong>Eka Pratiwi</strong>
+                  <span>Ibu Rumah Tangga, Surabaya Pusat</span>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="vs-section vs-faq" id="faq">
+        <div class="vs-container">
+          <div class="vs-section-head">
+            <span class="vs-kicker">Pusat Informasi</span>
+            <h2>Pertanyaan Populer seputar Klaim QR</h2>
+            <p>Segala hal yang perlu Anda ketahui tentang garansi digital VoltShield.</p>
+          </div>
+
+          <div class="vs-faq-list">
+            <details class="vs-faq-item" open>
+              <summary>
+                Bagaimana jika kardus kemasannya sudah terbuang?
+                <span class="vs-faq-icon"><svg class="vs-i"><use href="#i-chevron-down"></use></svg></span>
+              </summary>
+              <div class="vs-faq-answer">
+                Tidak perlu khawatir. Begitu produk berhasil dipindai dan didaftarkan, seluruh data garansi tersimpan permanen di cloud. Anda tetap dapat mengakses status garansi dan mengajukan klaim melalui portal VoltShield menggunakan akun terdaftar.
+              </div>
+            </details>
+
+            <details class="vs-faq-item">
+              <summary>
+                Apakah ada biaya tambahan untuk kunjungan teknisi ke rumah (Home Service)?
+                <span class="vs-faq-icon"><svg class="vs-i"><use href="#i-chevron-down"></use></svg></span>
+              </summary>
+              <div class="vs-faq-answer">
+                Tidak ada biaya tambahan selama kerusakan masih termasuk dalam cakupan garansi resmi. Biaya kunjungan hanya berlaku untuk kerusakan di luar cakupan, dan estimasi biaya akan diinformasikan terlebih dahulu sebelum perbaikan dilakukan.
+              </div>
+            </details>
+
+            <details class="vs-faq-item">
+              <summary>
+                Berapa lama proses persetujuan klaim dan kendala teknis?
+                <span class="vs-faq-icon"><svg class="vs-i"><use href="#i-chevron-down"></use></svg></span>
+              </summary>
+              <div class="vs-faq-answer">
+                Verifikasi awal biasanya memakan waktu 1×24 jam. Setelah klaim disetujui, penjadwalan teknisi dilakukan dalam 1–3 hari kerja, tergantung ketersediaan di kota Anda. Anda dapat memantau setiap perubahan status melalui dashboard.
+              </div>
+            </details>
+
+            <details class="vs-faq-item">
+              <summary>
+                Apakah garansi tetap berlaku jika produk dihadiahkan atau berpindah tangan?
+                <span class="vs-faq-icon"><svg class="vs-i"><use href="#i-chevron-down"></use></svg></span>
+              </summary>
+              <div class="vs-faq-answer">
+                Garansi tetap berlaku dan mengikuti unit produk, bukan nama pemilik. Pemilik baru cukup menghubungi layanan pelanggan untuk memperbarui data kepemilikan agar notifikasi dan proses klaim tetap berjalan lancar.
+              </div>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <!-- CTA -->
+      <section class="vs-section vs-cta-wrap" id="cta">
+        <div class="vs-container">
+          <div class="vs-cta">
+            <span class="vs-cta-dots" aria-hidden="true"></span>
+            <div class="vs-cta-copy">
+              <span class="vs-kicker">Proteksi Tanpa Khawatir</span>
+              <h2>Beli Produk Elektronik VoltShield? Daftarkan &amp; Pindai QR Dus Sekarang!</h2>
+              <p>Hanya butuh 3 detik untuk mendapatkan perlindungan garansi resmi hingga 5 tahun. Simpan bukti digital Anda dan nikmati layanan prioritas kapan pun dibutuhkan.</p>
+            </div>
+            <div class="vs-cta-actions">
+              <a class="vs-btn vs-btn-white vs-btn-lg" href="#cek-garansi">
+                <svg class="vs-i"><use href="#i-qr"></use></svg>
+                Pindai QR Klaim Garansi
+              </a>
+              <a class="vs-btn vs-btn-ghost vs-btn-lg" href="tel:02150001234">
+                <svg class="vs-i"><use href="#i-phone"></use></svg>
+                Konsultasi 24 Jam
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="vs-footer">
+      <div class="vs-container">
+        <div class="vs-footer-top">
+          <div class="vs-footer-brand">
+            <a class="vs-logo" href="{{ url_for('index') }}">
+              <span class="vs-logo-mark"><svg class="vs-i"><use href="#i-shield"></use></svg></span>
+              <span class="vs-logo-text">Volt<span>Shield</span></span>
+            </a>
+            <p>Solusi perlindungan elektronik terpadu dengan garansi digital berbasis QR Code. Aman, transparan, dan tanpa ribet.</p>
+          </div>
+
+          <div class="vs-footer-col">
+            <h4>Layanan</h4>
+            <a href="#produk">Produk</a>
+            <a href="#kebijakan">Kebijakan Garansi</a>
+            <a href="#cek-garansi">Cek Status Garansi</a>
+            <a href="#faq">Pusat Bantuan</a>
+          </div>
+
+          <div class="vs-footer-col">
+            <h4>Perusahaan</h4>
+            <a href="#tentang">Tentang Kami</a>
+            <a href="#testimoni">Testimoni</a>
+            <a href="{{ url_for('register') }}">Registrasi QR Produk</a>
+            <a href="{{ url_for('login') }}">Portal Layanan</a>
+          </div>
+
+          <div class="vs-footer-col">
+            <h4>Legal</h4>
+            <a href="#faq">Syarat Layanan</a>
+            <a href="#faq">Kebijakan Privasi</a>
+            <a href="#faq">Panduan Pengembalian</a>
+            <a href="#faq">Keamanan Data</a>
+          </div>
+
+          <div class="vs-footer-badges">
+            <span class="vs-footer-badge"><svg class="vs-i"><use href="#i-shield-check"></use></svg>Terdaftar di Kominfo</span>
+            <span class="vs-footer-badge"><svg class="vs-i"><use href="#i-lock"></use></svg>Perlindungan Data</span>
+            <span class="vs-footer-badge"><svg class="vs-i"><use href="#i-award"></use></svg>ISO 27001</span>
+          </div>
+        </div>
+
+        <div class="vs-footer-bottom">
+          <span>© 2024 PT VoltShield Indonesia. Seluruh hak cipta dilindungi.</span>
+          <span>VoltShield • Warranty Protection System</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+</body>
+</html>

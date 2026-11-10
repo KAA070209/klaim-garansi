@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klaim Saya - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Pelanggan</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Pelanggan</div>
+          <a class="nav-link" href="{{ url_for('pelanggan_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_scan') }}"><span class="nav-icon">&#9635;</span> Scan / Registrasi</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_produk') }}"><span class="nav-icon">&#9679;</span> Produk Saya</a>
+          <a class="nav-link active" href="{{ url_for('pelanggan_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim Saya</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Klaim Saya</div>
+            <div class="topbar-sub">Riwayat dan status klaim garansi Anda</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('pelanggan_produk') }}">Ajukan dari produk</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Daftar klaim</h1>
+            <p>Pantau status pengajuan klaim Anda.</p>
+          </div>
+        </div>
+
+        <div class="chip-row">
+          <span class="chip">Semua <span class="count">{{ status_counts.values()|sum }}</span></span>
+          {% for key, label in status_klaim_list %}
+            <span class="chip">
+              <span class="badge {{ key|status_kelas }}">{{ label }}</span>
+              <span class="count">{{ status_counts.get(key, 0) }}</span>
+            </span>
+          {% endfor %}
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header">
+            <div>
+              <h2>Riwayat klaim</h2>
+              <p>Klik detail untuk melihat riwayat status dan catatan servis.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Produk</th>
+                  <th>Tanggal Klaim</th>
+                  <th>Status</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in klaim %}
+                  <tr>
+                    <td>#{{ item.id }}</td>
+                    <td>
+                      <strong>{{ item.nama_produk }}</strong><br>
+                      <span class="small muted">{{ item.nomor_seri }}</span>
+                    </td>
+                    <td>{{ item.tanggal_klaim|tanggalwaktu }}</td>
+                    <td><span class="badge {{ item.status|status_kelas }}">{{ item.status|status_label }}</span></td>
+                    <td class="text-right">
+                      <a class="btn btn-secondary btn-sm" href="{{ url_for('pelanggan_klaim_detail', klaim_id=item.id) }}">Detail</a>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="table-empty">Belum ada klaim. Buka detail produk untuk mengajukan klaim.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

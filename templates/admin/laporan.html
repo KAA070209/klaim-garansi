@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Klaim - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel {{ current_user.role|title }}</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">{{ 'Menu Petugas' if request.path.startswith('/petugas/manage') or current_user.role=='petugas' else 'Menu Admin' }}</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'admin_dashboard' }}" href="{{ url_for('petugas_dashboard' if request.path.startswith('/petugas/manage') or current_user.role=='petugas' else 'admin_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          {% if current_user.role=='admin' %}<a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_petugas') }}" href="{{ url_for('admin_petugas') }}"><span class="nav-icon">&#9679;</span> Petugas</a>{% endif %}
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_pelanggan') }}" href="{{ url_for('petugas_manage_pelanggan' if request.path.startswith('/petugas/manage') else 'admin_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_kebijakan') }}" href="{{ url_for('petugas_manage_kebijakan' if request.path.startswith('/petugas/manage') else 'admin_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_produk') }}" href="{{ url_for('petugas_manage_produk' if request.path.startswith('/petugas/manage') else 'admin_produk') }}"><span class="nav-icon">&#9670;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_qr') }}" href="{{ url_for('petugas_manage_qr' if request.path.startswith('/petugas/manage') else 'admin_qr') }}"><span class="nav-icon">&#9635;</span> QR / Unit</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_registrasi') }}" href="{{ url_for('petugas_manage_registrasi' if request.path.startswith('/petugas/manage') else 'admin_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_garansi') }}" href="{{ url_for('petugas_manage_garansi' if request.path.startswith('/petugas/manage') else 'admin_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_klaim') }}" href="{{ url_for('petugas_manage_klaim' if request.path.startswith('/petugas/manage') else 'admin_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_servis') }}" href="{{ url_for('petugas_manage_servis' if request.path.startswith('/petugas/manage') else 'admin_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_notifikasi') }}" href="{{ url_for('petugas_manage_notifikasi' if request.path.startswith('/petugas/manage') else 'admin_notifikasi') }}"><span class="nav-icon">&#9993;</span> Notifikasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin_log') }}" href="{{ url_for('petugas_manage_log' if request.path.startswith('/petugas/manage') else 'admin_log') }}"><span class="nav-icon">&#9776;</span> Log</a>
+          {% if current_user.role=='admin' %}<a class="nav-link {{ 'active' if request.endpoint == 'admin_laporan' }}" href="{{ url_for('admin_laporan') }}"><span class="nav-icon">&#9636;</span> Laporan</a>{% endif %}
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Laporan Klaim Garansi</div>
+            <div class="topbar-sub">Filter, tinjau, dan cetak laporan klaim</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <button type="button" class="btn btn-secondary btn-sm no-print" data-print>Cetak</button>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Laporan klaim</h1>
+            <p>Data ditampilkan maksimal 500 baris sesuai filter.</p>
+          </div>
+          <div class="actions no-print">
+            {% if current_user.role=='admin' %}<a class="btn btn-secondary" href="{{ url_for('admin_laporan') }}">Reset filter</a>{% endif %}
+          </div>
+        </div>
+
+        <div class="card no-print">
+          <form method="get" action="{{ url_for('admin_laporan') }}" class="filters">
+            <div class="form-group">
+              <label for="tanggal_mulai">Tanggal mulai</label>
+              <input type="date" class="form-control" id="tanggal_mulai" name="tanggal_mulai"
+                     value="{{ filter.tanggal_mulai }}">
+            </div>
+            <div class="form-group">
+              <label for="tanggal_selesai">Tanggal selesai</label>
+              <input type="date" class="form-control" id="tanggal_selesai" name="tanggal_selesai"
+                     value="{{ filter.tanggal_selesai }}">
+            </div>
+            <div class="form-group">
+              <label for="status">Status klaim</label>
+              <select class="form-select" id="status" name="status">
+                <option value="">Semua status</option>
+                {% for key, label in status_klaim_list %}
+                  <option value="{{ key }}" {{ 'selected' if filter.status == key }}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="q">Cari</label>
+              <input type="text" class="form-control" id="q" name="q" value="{{ filter.q }}"
+                     placeholder="Pelanggan, produk, seri, invoice">
+            </div>
+            <button type="submit" class="btn btn-primary">Terapkan</button>
+          </form>
+        </div>
+
+        <div class="chip-row no-print">
+          <a class="chip {{ 'active' if not filter.status }}" href="{{ url_for('admin_laporan', tanggal_mulai=filter.tanggal_mulai, tanggal_selesai=filter.tanggal_selesai, q=filter.q) }}">
+            Semua <span class="count">{{ total_terfilter }}</span>
+          </a>
+          {% for key, label in status_klaim_list %}
+            <a class="chip {{ 'active' if filter.status == key }}"
+               href="{{ url_for('admin_laporan', status=key, tanggal_mulai=filter.tanggal_mulai, tanggal_selesai=filter.tanggal_selesai, q=filter.q) }}">
+              {{ label }} <span class="count">{{ status_counts.get(key, 0) }}</span>
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header">
+            <div>
+              <h2>Data klaim</h2>
+              <p>{{ total_terfilter }} klaim sesuai filter.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Tanggal</th>
+                  <th>Pelanggan</th>
+                  <th>Produk / Seri</th>
+                  <th>Invoice</th>
+                  <th>Garansi</th>
+                  <th>Status</th>
+                  <th>Petugas</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in laporan %}
+                  <tr>
+                    <td>#{{ item.klaim_id }}</td>
+                    <td>{{ item.tanggal_klaim|tanggalwaktu }}</td>
+                    <td>
+                      <strong>{{ item.nama_pelanggan }}</strong><br>
+                      <span class="small muted">{{ item.email_pelanggan }}</span>
+                    </td>
+                    <td>
+                      <strong>{{ item.nama_produk }}</strong><br>
+                      <span class="small muted">{{ item.nomor_seri }}</span>
+                    </td>
+                    <td>{{ item.nomor_invoice }}</td>
+                    <td>
+                      {{ item.tanggal_berakhir_garansi|tanggal }}<br>
+                      <span class="badge {{ item.status_garansi_aktual|status_kelas }}">{{ item.status_garansi_aktual|status_label }}</span>
+                    </td>
+                    <td><span class="badge {{ item.status_klaim|status_kelas }}">{{ item.status_klaim|status_label }}</span></td>
+                    <td>{{ item.nama_petugas or '-' }}</td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="8" class="table-empty">Tidak ada klaim yang cocok dengan filter.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card card-flush no-print">
+          <div class="card-header">
+            <div>
+              <h2>Log aktivitas terbaru</h2>
+              <p>Seratus aktivitas terakhir yang tercatat di sistem.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Pengguna</th>
+                  <th>Aksi</th>
+                  <th>Deskripsi</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for log in log_aktivitas %}
+                  <tr>
+                    <td>{{ log.dibuat_pada|tanggalwaktu }}</td>
+                    <td>
+                      {{ log.nama_pengguna or 'Sistem' }}<br>
+                      <span class="small muted">{{ role_labels.get(log.role, log.role or '-') }}</span>
+                    </td>
+                    <td><span class="badge badge-neutral">{{ log.aksi }}</span></td>
+                    <td>{{ log.deskripsi or '-' }}</td>
+                    <td class="small muted">{{ log.alamat_ip or '-' }}</td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="table-empty">Belum ada log aktivitas.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

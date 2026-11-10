@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tambah Produk - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Petugas</div>
+        </div>
+      </div>
+                  <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Petugas</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'petugas_dashboard' }}" href="{{ url_for('petugas_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'kebijakan' in request.endpoint }}" href="{{ url_for('petugas_manage_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_produk') and 'manage' not in request.endpoint }}" href="{{ url_for('petugas_produk') }}"><span class="nav-icon">&#9679;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and (request.endpoint=='petugas_qr' or request.endpoint=='petugas_qr_generate') }}" href="{{ url_for('petugas_qr') }}"><span class="nav-icon">&#9635;</span> QR Code</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'registrasi' in request.endpoint }}" href="{{ url_for('petugas_manage_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'pelanggan' in request.endpoint }}" href="{{ url_for('petugas_manage_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'garansi' in request.endpoint }}" href="{{ url_for('petugas_manage_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_klaim') }}" href="{{ url_for('petugas_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'servis' in request.endpoint }}" href="{{ url_for('petugas_manage_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Tambah Produk</div>
+            <div class="topbar-sub">Lengkapi data model produk</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_produk') }}">Kembali</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Form produk baru</h1>
+            <p>Kebijakan garansi menentukan durasi garansi saat pelanggan melakukan registrasi.</p>
+          </div>
+        </div>
+
+        <div class="card" style="max-width: 860px;">
+          <form method="post" action="{{ url_for('petugas_produk_tambah') }}">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="nama_produk">Nama produk</label>
+                <input type="text" class="form-control" id="nama_produk" name="nama_produk"
+                       value="{{ form.nama_produk }}" minlength="3" required>
+              </div>
+              <div class="form-group">
+                <label for="kategori_model">Kategori / model</label>
+                <input type="text" class="form-control" id="kategori_model" name="kategori_model"
+                       value="{{ form.kategori_model }}" required>
+              </div>
+              <div class="form-group">
+                <label for="kebijakan_garansi_id">Kebijakan garansi</label>
+                <select class="form-select" id="kebijakan_garansi_id" name="kebijakan_garansi_id" required>
+                  <option value="">Pilih kebijakan</option>
+                  {% for item in kebijakan_list %}
+                    <option value="{{ item.id }}" {{ 'selected' if form.kebijakan_garansi_id|string == item.id|string }}>
+                      {{ item.nama }} ({{ item.durasi_bulan }} bulan)
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="status">Status produk</label>
+                <select class="form-select" id="status" name="status">
+                  <option value="aktif" {{ 'selected' if form.status == 'aktif' }}>Aktif</option>
+                  <option value="nonaktif" {{ 'selected' if form.status == 'nonaktif' }}>Nonaktif</option>
+                </select>
+              </div>
+              <div class="form-group full">
+                <label for="deskripsi">Deskripsi</label>
+                <textarea class="form-control" id="deskripsi" name="deskripsi"
+                          placeholder="Deskripsi singkat produk (opsional)">{{ form.deskripsi }}</textarea>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">Simpan produk</button>
+              <a class="btn btn-secondary" href="{{ url_for('petugas_produk') }}">Batal</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

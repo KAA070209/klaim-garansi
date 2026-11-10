@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scan QR / Registrasi Produk - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <style>
+    .scan-video-wrap { position: relative; background: #0e2238; border-radius: 12px; overflow: hidden; max-width: 520px; margin: 0 auto 1rem; }
+    .scan-video-wrap video { width: 100%; display: block; min-height: 240px; object-fit: cover; }
+    .scan-overlay { position: absolute; inset: 12%; border: 2px solid rgba(255,255,255,.7); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(14,34,56,.35); pointer-events: none; }
+    .scan-status { font-size: .9rem; color: var(--muted); margin-top: .5rem; }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Pelanggan</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Pelanggan</div>
+          <a class="nav-link" href="{{ url_for('pelanggan_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link active" href="{{ url_for('pelanggan_scan') }}"><span class="nav-icon">&#9635;</span> Scan / Registrasi</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_produk') }}"><span class="nav-icon">&#9679;</span> Produk Saya</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim Saya</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Scan QR / Registrasi Produk</div>
+            <div class="topbar-sub">Pindai QR Code (kamera/foto) untuk registrasi produk atau mengajukan klaim garansi</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Registrasi produk &amp; klaim garansi</h1>
+            <p>Pindai QR Code dengan kamera, unggah foto QR, atau masukkan token/URL secara manual.</p>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <h2>Pindai dengan kamera</h2>
+                <p>Izinkan akses kamera saat diminta oleh browser.</p>
+              </div>
+            </div>
+
+            <div id="scanArea">
+              <div class="scan-video-wrap" id="videoWrap" style="display:none;">
+                <video id="scanVideo" playsinline muted></video>
+                <div class="scan-overlay"></div>
+              </div>
+              <div class="form-actions" style="justify-content:center; margin-bottom:.5rem;">
+                <button type="button" class="btn btn-primary" id="btnStartScan">Mulai Scan Kamera</button>
+                <button type="button" class="btn btn-secondary" id="btnStopScan" style="display:none;">Hentikan</button>
+              </div>
+              <div class="scan-status text-center" id="scanStatus">
+                Kamera digunakan hanya di perangkat Anda. Jika pemindaian tidak didukung, gunakan scan dari foto atau input manual.
+              </div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--line); margin:1.25rem 0;">
+
+            <h3>Scan dari foto</h3>
+            <p class="small muted">Unggah foto/gambar yang berisi QR Code produk (jpg, png, webp).</p>
+            <div class="form-group">
+              <label for="qrPhoto">Pilih foto QR</label>
+              <input type="file" class="form-control" id="qrPhoto" accept="image/*" capture="environment">
+              <span class="form-help">Foto diproses di perangkat Anda, tidak diunggah ke server untuk pemindaian.</span>
+            </div>
+            <div id="photoPreviewWrap" style="display:none; margin-bottom:.75rem;">
+              <img id="photoPreview" alt="Pratinjau foto QR" style="max-width:100%; max-height:220px; border-radius:10px; border:1px solid var(--line);">
+            </div>
+            <div class="form-actions" style="margin-bottom:.25rem;">
+              <button type="button" class="btn btn-secondary" id="btnScanPhoto">Scan Foto</button>
+            </div>
+            <div class="scan-status" id="photoStatus"></div>
+
+            <hr style="border:none;border-top:1px solid var(--line); margin:1.25rem 0;">
+
+            <h3>Input manual</h3>
+            <p class="small muted">Tempel token QR atau tautan lengkap (contoh: <span class="code">https://.../qr/TOKEN</span>).</p>
+            <form method="post" action="{{ url_for('pelanggan_scan_cari') }}" id="manualForm">
+              <div class="form-group">
+                <label for="token">Token / URL QR</label>
+                <input type="text" class="form-control" id="token" name="token"
+                       placeholder="Masukkan token atau URL QR Code" autocomplete="off" required>
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Buka produk</button>
+              </div>
+            </form>
+          </div>
+
+          <aside>
+            <div class="card">
+              <h2>Cara kerja</h2>
+              <div class="info-list">
+                <div class="info-row"><span class="label">1. Pindai</span><span class="value">Scan QR via kamera, unggah foto QR, atau masukkan token/URL.</span></div>
+                <div class="info-row"><span class="label">2. Registrasi</span><span class="value">Jika produk belum terdaftar, lengkapi data pembelian untuk mengaktifkan garansi.</span></div>
+                <div class="info-row"><span class="label">3. Klaim garansi</span><span class="value">Jika produk sudah terdaftar dan garansi aktif, ajukan klaim langsung dari halaman produk.</span></div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Tips</h3>
+              <p class="small muted mb-0">Pastikan pencahayaan cukup dan QR Code terlihat jelas. Untuk klaim garansi, siapkan foto kerusakan dan bukti pembelian.</p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/jsQR.js') }}"></script>
+  <script>
+  (function () {
+    var video = document.getElementById('scanVideo');
+    var wrap = document.getElementById('videoWrap');
+    var status = document.getElementById('scanStatus');
+    var btnStart = document.getElementById('btnStartScan');
+    var btnStop = document.getElementById('btnStopScan');
+    var stream = null;
+    var rafId = null;
+    var detector = null;
+    var busy = false;
+
+    function setStatus(msg) { if (status) status.textContent = msg; }
+
+    function stopScan() {
+      busy = false;
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+      if (video) video.srcObject = null;
+      if (wrap) wrap.style.display = 'none';
+      if (btnStart) btnStart.style.display = '';
+      if (btnStop) btnStop.style.display = 'none';
+    }
+
+    function handleValue(value, source) {
+      if (!value) return;
+      // Hentikan kamera bila aktif, lalu isi token otomatis.
+      if (source !== 'photo') {
+        busy = true;
+        stopScan();
+      }
+      var tokenInput = document.getElementById('token');
+      if (tokenInput) {
+        tokenInput.value = value;
+        tokenInput.focus();
+        try { tokenInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) {}
+      }
+      var msg = 'QR terdeteksi. Token otomatis terisi: ' + value;
+      setStatus(msg);
+      setPhotoStatus(source === 'photo' ? 'QR terdeteksi dari foto. Token otomatis terisi di input manual.' : 'QR terdeteksi dari kamera. Token otomatis terisi di input manual.', false);
+      // Izinkan scan ulang kamera setelah token terisi.
+      busy = false;
+    }
+
+    function decodeWithJsQR(source) {
+      if (typeof jsQR !== 'function') return null;
+      try {
+        var w = source.videoWidth || source.naturalWidth || source.width;
+        var h = source.videoHeight || source.naturalHeight || source.height;
+        if (!w || !h) return null;
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d', { willReadFrequently: true });
+        ctx.drawImage(source, 0, 0, w, h);
+        var imgData = ctx.getImageData(0, 0, w, h);
+        var code = jsQR(imgData.data, w, h, { inversionAttempts: 'attemptBoth' });
+        return code && code.data ? code.data : null;
+      } catch (e) { return null; }
+    }
+
+    function tick() {
+      if (!video || video.readyState < 2) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+      if (detector) {
+        detector.detect(video).then(function (codes) {
+          if (codes && codes.length && codes[0].rawValue) {
+            handleValue(codes[0].rawValue);
+            return;
+          }
+          rafId = requestAnimationFrame(tick);
+        }).catch(function () {
+          rafId = requestAnimationFrame(tick);
+        });
+        return;
+      }
+      // Fallback kamera: jsQR pada frame video
+      var val = decodeWithJsQR(video);
+      if (val) { handleValue(val); return; }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    async function startScan() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setStatus('Browser tidak mendukung akses kamera. Gunakan scan dari foto atau input manual.');
+        return;
+      }
+      if (!('BarcodeDetector' in window)) {
+        if (typeof jsQR === 'function') {
+          try {
+            detector = null;
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+            if (video) { video.srcObject = stream; await video.play(); }
+            if (wrap) wrap.style.display = '';
+            if (btnStart) btnStart.style.display = 'none';
+            if (btnStop) btnStop.style.display = '';
+            setStatus('Arahkan kamera ke QR Code produk... (mode kompatibilitas)');
+            busy = false;
+            tick();
+            return;
+          } catch (e) {
+            setStatus('Kamera tidak dapat diakses. Gunakan scan dari foto atau input manual.');
+            return;
+          }
+        }
+        setStatus('Pemindaian QR otomatis tidak didukung browser ini. Gunakan scan dari foto atau input manual.');
+        return;
+      }
+      try {
+        detector = new BarcodeDetector({ formats: ['qr_code'] });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+        if (video) { video.srcObject = stream; await video.play(); }
+        if (wrap) wrap.style.display = '';
+        if (btnStart) btnStart.style.display = 'none';
+        if (btnStop) btnStop.style.display = '';
+        setStatus('Arahkan kamera ke QR Code produk...');
+        busy = false;
+        tick();
+      } catch (e) {
+        setStatus('Kamera tidak dapat diakses atau izin ditolak. Gunakan scan dari foto atau input manual.');
+        stopScan();
+      }
+    }
+
+    if (btnStart) btnStart.addEventListener('click', startScan);
+    if (btnStop) btnStop.addEventListener('click', function () { stopScan(); setStatus('Pemindaian dihentikan.'); });
+    window.addEventListener('beforeunload', stopScan);
+
+    // Scan QR dari foto yang diunggah (client-side).
+    var qrPhoto = document.getElementById('qrPhoto');
+    var btnScanPhoto = document.getElementById('btnScanPhoto');
+    var photoStatus = document.getElementById('photoStatus');
+    var photoPreview = document.getElementById('photoPreview');
+    var photoPreviewWrap = document.getElementById('photoPreviewWrap');
+
+    function setPhotoStatus(msg, isError) {
+      if (!photoStatus) return;
+      photoStatus.textContent = msg || '';
+      photoStatus.style.color = isError ? 'var(--danger, #b73a32)' : 'var(--muted)';
+    }
+
+    if (qrPhoto) {
+      qrPhoto.addEventListener('change', function () {
+        setPhotoStatus('');
+        var file = qrPhoto.files && qrPhoto.files[0];
+        if (!file) {
+          if (photoPreviewWrap) photoPreviewWrap.style.display = 'none';
+          return;
+        }
+        var url = URL.createObjectURL(file);
+        if (photoPreview) photoPreview.src = url;
+        if (photoPreviewWrap) photoPreviewWrap.style.display = '';
+        setPhotoStatus('Foto dipilih. Klik "Scan Foto" untuk membaca QR Code.');
+      });
+    }
+
+    async function scanPhoto() {
+      var file = qrPhoto && qrPhoto.files && qrPhoto.files[0];
+      if (!file) {
+        setPhotoStatus('Pilih foto yang berisi QR Code terlebih dahulu.', true);
+        return;
+      }
+      try {
+        setPhotoStatus('Memindai foto...');
+        if (btnScanPhoto) btnScanPhoto.disabled = true;
+
+        // 1) BarcodeDetector (native) bila tersedia
+        if ('BarcodeDetector' in window) {
+          try {
+            var detectorPhoto = new BarcodeDetector({ formats: ['qr_code'] });
+            var bitmap = await createImageBitmap(file);
+            var codes = await detectorPhoto.detect(bitmap);
+            bitmap.close();
+            if (codes && codes.length && codes[0].rawValue) {
+              handleValue(codes[0].rawValue, 'photo');
+              return;
+            }
+            // fallback canvas untuk BarcodeDetector
+            try {
+              var img = new Image();
+              var objUrl = URL.createObjectURL(file);
+              await new Promise(function (resolve, reject) {
+                img.onload = resolve; img.onerror = reject; img.src = objUrl;
+              });
+              var canvas = document.createElement('canvas');
+              canvas.width = img.naturalWidth || img.width;
+              canvas.height = img.naturalHeight || img.height;
+              var ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0);
+              URL.revokeObjectURL(objUrl);
+              var codes2 = await detectorPhoto.detect(canvas);
+              if (codes2 && codes2.length && codes2[0].rawValue) {
+                handleValue(codes2[0].rawValue, 'photo');
+                return;
+              }
+            } catch (e2) { /* abaikan */ }
+          } catch (eNative) { /* lanjut ke jsQR */ }
+        }
+
+        // 2) Fallback jsQR (kompatibel lintas browser)
+        if (typeof jsQR === 'function') {
+          var img2 = new Image();
+          var objUrl2 = URL.createObjectURL(file);
+          await new Promise(function (resolve, reject) {
+            img2.onload = resolve; img2.onerror = function(){ reject(new Error('load')); }; img2.src = objUrl2;
+          });
+          try {
+            var val = decodeWithJsQR(img2);
+            if (val) { handleValue(val, 'photo'); return; }
+            // coba resolusi besar apa adanya sudah dilakukan; coba canvas eksplisit
+            var c = document.createElement('canvas');
+            c.width = img2.naturalWidth || img2.width; c.height = img2.naturalHeight || img2.height;
+            var cx = c.getContext('2d', { willReadFrequently: true });
+            cx.drawImage(img2, 0, 0);
+            var id = cx.getImageData(0, 0, c.width, c.height);
+            var code = jsQR(id.data, c.width, c.height, { inversionAttempts: 'attemptBoth' });
+            if (code && code.data) { handleValue(code.data, 'photo'); return; }
+          } finally {
+            URL.revokeObjectURL(objUrl2);
+          }
+        } else {
+          setPhotoStatus('Pemindaian foto tidak tersedia (library tidak termuat). Muat ulang halaman atau gunakan input manual.', true);
+          return;
+        }
+
+        setPhotoStatus('QR Code tidak terdeteksi pada foto. Pastikan foto jelas, tidak buram/crop, dan QR terlihat utuh.', true);
+      } catch (e) {
+        setPhotoStatus('Gagal memindai foto. Coba foto lain atau gunakan input manual.', true);
+      } finally {
+        if (btnScanPhoto) btnScanPhoto.disabled = false;
+      }
+    }
+
+    if (btnScanPhoto) btnScanPhoto.addEventListener('click', scanPhoto);
+  })();
+  </script>
+</body>
+</html>

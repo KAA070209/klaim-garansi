@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akses Ditolak - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark mb-2">403</div>
+      <h1 class="auth-title">Akses ditolak</h1>
+      <p class="auth-sub">Anda tidak memiliki hak akses untuk membuka halaman ini.</p>
+      <div class="actions">
+        {% if current_user %}
+          <a class="btn btn-primary" href="{{ url_for('admin_dashboard') if current_user.role == 'admin' else (url_for('petugas_dashboard') if current_user.role == 'petugas' else url_for('pelanggan_dashboard')) }}">Kembali ke dashboard</a>
+        {% else %}
+          <a class="btn btn-primary" href="{{ url_for('login') }}">Login</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</body>
+</html>

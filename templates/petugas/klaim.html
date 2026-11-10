@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klaim Garansi - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Petugas</div>
+        </div>
+      </div>
+                  <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Petugas</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'petugas_dashboard' }}" href="{{ url_for('petugas_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'kebijakan' in request.endpoint }}" href="{{ url_for('petugas_manage_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_produk') and 'manage' not in request.endpoint }}" href="{{ url_for('petugas_produk') }}"><span class="nav-icon">&#9679;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and (request.endpoint=='petugas_qr' or request.endpoint=='petugas_qr_generate') }}" href="{{ url_for('petugas_qr') }}"><span class="nav-icon">&#9635;</span> QR Code</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'registrasi' in request.endpoint }}" href="{{ url_for('petugas_manage_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'pelanggan' in request.endpoint }}" href="{{ url_for('petugas_manage_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'garansi' in request.endpoint }}" href="{{ url_for('petugas_manage_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_klaim') }}" href="{{ url_for('petugas_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'servis' in request.endpoint }}" href="{{ url_for('petugas_manage_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Verifikasi Klaim</div>
+            <div class="topbar-sub">Tinjau dan proses klaim garansi pelanggan</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Daftar klaim</h1>
+            <p>Gunakan filter status untuk memprioritaskan klaim baru.</p>
+          </div>
+        </div>
+
+        <div class="chip-row">
+          <a class="chip {{ 'active' if not status }}" href="{{ url_for('petugas_klaim', q=q) }}">
+            Semua <span class="count">{{ status_counts.values()|sum }}</span>
+          </a>
+          {% for key, label in status_klaim_list %}
+            <a class="chip {{ 'active' if status == key }}" href="{{ url_for('petugas_klaim', status=key, q=q) }}">
+              {{ label }} <span class="count">{{ status_counts.get(key, 0) }}</span>
+            </a>
+          {% endfor %}
+        </div>
+
+        <div class="card">
+          <form method="get" action="{{ url_for('petugas_klaim') }}" class="filters">
+            <div class="form-group">
+              <label for="q">Cari</label>
+              <input type="text" class="form-control" id="q" name="q" value="{{ q }}"
+                     placeholder="Pelanggan, produk, seri">
+            </div>
+            <input type="hidden" name="status" value="{{ status }}">
+            <button type="submit" class="btn btn-primary">Terapkan</button>
+            <a class="btn btn-secondary" href="{{ url_for('petugas_klaim') }}">Reset</a>
+          </form>
+
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Pelanggan</th>
+                  <th>Produk</th>
+                  <th>Tanggal Klaim</th>
+                  <th>Garansi</th>
+                  <th>Status</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in daftar_klaim %}
+                  <tr>
+                    <td>#{{ item.id }}</td>
+                    <td>
+                      <strong>{{ item.nama_pelanggan }}</strong><br>
+                      <span class="small muted">{{ item.email_pelanggan }}</span>
+                    </td>
+                    <td>
+                      <strong>{{ item.nama_produk }}</strong><br>
+                      <span class="small muted">{{ item.nomor_seri }}</span>
+                    </td>
+                    <td>{{ item.tanggal_klaim|tanggalwaktu }}</td>
+                    <td>
+                      {{ item.tanggal_berakhir|tanggal }}<br>
+                      <span class="badge {{ item.status_garansi_aktual|status_kelas }}">{{ item.status_garansi_aktual|status_label }}</span>
+                    </td>
+                    <td><span class="badge {{ item.status|status_kelas }}">{{ item.status|status_label }}</span></td>
+                    <td class="text-right">
+                      <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_klaim_detail', klaim_id=item.id) }}">Detail</a>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="7" class="table-empty">Tidak ada klaim yang cocok.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

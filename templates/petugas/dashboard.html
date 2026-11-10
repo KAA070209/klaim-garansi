@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Petugas - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Petugas</div>
+        </div>
+      </div>
+                  <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Petugas</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'petugas_dashboard' }}" href="{{ url_for('petugas_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'kebijakan' in request.endpoint }}" href="{{ url_for('petugas_manage_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_produk') and 'manage' not in request.endpoint }}" href="{{ url_for('petugas_produk') }}"><span class="nav-icon">&#9679;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and (request.endpoint=='petugas_qr' or request.endpoint=='petugas_qr_generate') }}" href="{{ url_for('petugas_qr') }}"><span class="nav-icon">&#9635;</span> QR Code</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'registrasi' in request.endpoint }}" href="{{ url_for('petugas_manage_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'pelanggan' in request.endpoint }}" href="{{ url_for('petugas_manage_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'garansi' in request.endpoint }}" href="{{ url_for('petugas_manage_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_klaim') }}" href="{{ url_for('petugas_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'servis' in request.endpoint }}" href="{{ url_for('petugas_manage_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Dashboard Petugas</div>
+            <div class="topbar-sub">Ringkasan produk, registrasi, dan klaim</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="user-chip">
+            <div class="avatar">{{ current_user.nama[:1]|upper }}</div>
+            <div class="user-meta">
+              <div class="small"><strong>{{ current_user.nama }}</strong></div>
+              <div class="small muted">{{ current_user.email }}</div>
+            </div>
+          </div>
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Selamat datang, {{ current_user.nama }}</h1>
+            <p>Ringkasan operasional per {{ hari_ini|tanggal }}.</p>
+          </div>
+          <div class="actions">
+            <a class="btn btn-secondary" href="{{ url_for('petugas_qr_generate') }}">Buat QR Code</a>
+            <a class="btn btn-primary" href="{{ url_for('petugas_klaim') }}">Lihat klaim</a>
+          </div>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Produk</div>
+            <div class="stat-value">{{ stats.total_produk }}</div>
+            <div class="stat-note">Model produk terdaftar</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Pelanggan</div>
+            <div class="stat-value">{{ stats.total_pelanggan }}</div>
+            <div class="stat-note">Akun pelanggan</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Registrasi Aktif</div>
+            <div class="stat-value">{{ stats.total_registrasi }}</div>
+            <div class="stat-note">Produk terdaftar pelanggan</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Unit QR</div>
+            <div class="stat-value">{{ stats.total_unit_qr }}</div>
+            <div class="stat-note">Total unit dengan QR</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Klaim</div>
+            <div class="stat-value">{{ stats.total_klaim }}</div>
+            <div class="stat-note">Seluruh klaim garansi</div>
+          </div>
+        </div>
+
+        <!-- CRUD Produk dari Dashboard Petugas -->
+        <div class="card card-flush">
+          <div class="card-header">
+            <div>
+              <h2>Kelola Produk Cepat</h2>
+              <p>Lihat produk terbaru dan aktifkan/nonaktifkan langsung dari dashboard.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Produk</th>
+                  <th>Kategori / Model</th>
+                  <th>Kebijakan</th>
+                  <th class="text-right">Status</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in daftar_produk_dashboard %}
+                  <tr>
+                    <td><strong>{{ p.nama_produk }}</strong></td>
+                    <td class="small muted">{{ p.kategori_model }}</td>
+                    <td class="small muted">{{ p.nama_kebijakan }}</td>
+                    <td class="text-right">
+                      <span class="badge {{ 'badge-success' if p.status == 'aktif' else 'badge-neutral' }}">
+                        {{ 'Aktif' if p.status == 'aktif' else 'Nonaktif' }}
+                      </span>
+                    </td>
+                    <td class="text-right">
+                      <form method="post" action="{{ url_for('petugas_dashboard_produk_toggle', produk_id=p.id) }}" class="inline-form" data-confirm="Yakin ingin mengubah produk {{ p.nama_produk }} menjadi {{ 'nonaktif' if p.status == 'aktif' else 'aktif' }}?">
+                        <button class="btn btn-{{ 'danger' if p.status == 'aktif' else 'success' }} btn-sm" type="submit">
+                          {{ 'Nonaktifkan' if p.status == 'aktif' else 'Aktifkan' }}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="table-empty">Belum ada produk terdaftar.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h2>Klaim berdasarkan status</h2>
+              <p>Klik status untuk membuka daftar klaim terkait.</p>
+            </div>
+          </div>
+          <div class="chip-row">
+            {% for key, label in status_klaim_list %}
+              <a class="chip" href="{{ url_for('petugas_klaim', status=key) }}">
+                <span class="badge {{ key|status_kelas }}">{{ label }}</span>
+                <span class="count">{{ status_counts.get(key, 0) }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="card card-flush">
+          <div class="card-header">
+            <div>
+              <h2>Klaim terbaru</h2>
+              <p>Delapan klaim terakhir yang perlu ditinjau.</p>
+            </div>
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('petugas_klaim') }}">Lihat semua</a>
+          </div>
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Pelanggan</th>
+                  <th>Produk</th>
+                  <th>Tanggal</th>
+                  <th>Status</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in klaim_terbaru %}
+                  <tr>
+                    <td>#{{ item.id }}</td>
+                    <td>{{ item.nama_pelanggan }}</td>
+                    <td>
+                      <strong>{{ item.nama_produk }}</strong><br>
+                      <span class="small muted">{{ item.nomor_seri }}</span>
+                    </td>
+                    <td>{{ item.tanggal_klaim|tanggal }}</td>
+                    <td><span class="badge {{ item.status|status_kelas }}">{{ item.status|status_label }}</span></td>
+                    <td class="text-right">
+                      <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_klaim_detail', klaim_id=item.id) }}">Detail</a>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="6" class="table-empty">Belum ada klaim yang masuk.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

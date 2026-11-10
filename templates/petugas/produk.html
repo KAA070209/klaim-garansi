@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produk - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Petugas</div>
+        </div>
+      </div>
+                  <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Petugas</div>
+          <a class="nav-link {{ 'active' if request.endpoint == 'petugas_dashboard' }}" href="{{ url_for('petugas_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'kebijakan' in request.endpoint }}" href="{{ url_for('petugas_manage_kebijakan') }}"><span class="nav-icon">&#9881;</span> Kebijakan Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_produk') and 'manage' not in request.endpoint }}" href="{{ url_for('petugas_produk') }}"><span class="nav-icon">&#9679;</span> Produk</a>
+          <a class="nav-link {{ 'active' if request.endpoint and (request.endpoint=='petugas_qr' or request.endpoint=='petugas_qr_generate') }}" href="{{ url_for('petugas_qr') }}"><span class="nav-icon">&#9635;</span> QR Code</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'registrasi' in request.endpoint }}" href="{{ url_for('petugas_manage_registrasi') }}"><span class="nav-icon">&#9636;</span> Registrasi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'pelanggan' in request.endpoint }}" href="{{ url_for('petugas_manage_pelanggan') }}"><span class="nav-icon">&#9786;</span> Pelanggan</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'garansi' in request.endpoint }}" href="{{ url_for('petugas_manage_garansi') }}"><span class="nav-icon">&#9733;</span> Garansi</a>
+          <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('petugas_klaim') }}" href="{{ url_for('petugas_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim</a>
+          <a class="nav-link {{ 'active' if request.endpoint and 'servis' in request.endpoint }}" href="{{ url_for('petugas_manage_servis') }}"><span class="nav-icon">&#9881;</span> Servis</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Pengelolaan Produk</div>
+            <div class="topbar-sub">Data model produk dan kebijakan garansi</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_qr_generate') }}">Buat QR</a>
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Daftar produk</h1>
+            <p>Setiap produk memiliki kebijakan garansi dan unit QR tersendiri.</p>
+          </div>
+          <a class="btn btn-primary" href="{{ url_for('petugas_produk_tambah') }}">Tambah produk</a>
+        </div>
+
+        <div class="card">
+          <form method="get" action="{{ url_for('petugas_produk') }}" class="filters">
+            <div class="form-group">
+              <label for="q">Cari</label>
+              <input type="text" class="form-control" id="q" name="q" value="{{ q }}"
+                     placeholder="Nama produk atau kategori">
+            </div>
+            <div class="form-group">
+              <label for="status">Status</label>
+              <select class="form-select" id="status" name="status">
+                <option value="">Semua status</option>
+                <option value="aktif" {{ 'selected' if status == 'aktif' }}>Aktif</option>
+                <option value="nonaktif" {{ 'selected' if status == 'nonaktif' }}>Nonaktif</option>
+              </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Terapkan</button>
+            <a class="btn btn-secondary" href="{{ url_for('petugas_produk') }}">Reset</a>
+          </form>
+
+          <div class="table-wrap">
+            <table class="data">
+              <thead>
+                <tr>
+                  <th>Produk</th>
+                  <th>Kebijakan Garansi</th>
+                  <th>Unit QR</th>
+                  <th>Status</th>
+                  <th class="text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for item in daftar_produk %}
+                  <tr>
+                    <td>
+                      <strong>{{ item.nama_produk }}</strong><br>
+                      <span class="small muted">{{ item.kategori_model }}</span>
+                    </td>
+                    <td>
+                      {{ item.nama_kebijakan }}<br>
+                      <span class="small muted">{{ item.durasi_bulan }} bulan</span>
+                    </td>
+                    <td>
+                      <strong>{{ item.jumlah_unit }}</strong> unit<br>
+                      <span class="small muted">{{ item.jumlah_terdaftar }} terdaftar</span>
+                    </td>
+                    <td>
+                      <span class="badge {{ item.status|status_kelas }}">{{ item.status|status_label }}</span>
+                    </td>
+                    <td class="text-right">
+                      <div class="actions" style="justify-content: flex-end;">
+                        <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_qr', produk_id=item.id) }}">QR</a>
+                        <a class="btn btn-secondary btn-sm" href="{{ url_for('petugas_produk_edit', produk_id=item.id) }}">Edit</a>
+                        <form class="inline-form" method="post" action="{{ url_for('petugas_produk_toggle', produk_id=item.id) }}">
+                          <button type="submit" class="btn btn-sm {{ 'btn-warning' if item.status == 'aktif' else 'btn-success' }}"
+                                  data-confirm="Yakin ingin {{ 'menonaktifkan' if item.status == 'aktif' else 'mengaktifkan' }} produk {{ item.nama_produk }}?">
+                            {{ 'Nonaktifkan' if item.status == 'aktif' else 'Aktifkan' }}
+                          </button>
+                        </form>
+                        <form class="inline-form" method="post" action="{{ url_for('petugas_produk_hapus', produk_id=item.id) }}" data-confirm="Hapus produk {{ item.nama_produk }}?">
+                          <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="5" class="table-empty">Tidak ada produk yang cocok.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

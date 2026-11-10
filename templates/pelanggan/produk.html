@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produk Saya - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <div class="brand-title">Sistem Klaim Garansi</div>
+          <div class="brand-sub">Panel Pelanggan</div>
+        </div>
+      </div>
+      <nav>
+        <div class="nav-group">
+          <div class="nav-label">Menu Pelanggan</div>
+          <a class="nav-link" href="{{ url_for('pelanggan_dashboard') }}"><span class="nav-icon">&#9632;</span> Dashboard</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_scan') }}"><span class="nav-icon">&#9635;</span> Scan / Registrasi</a>
+          <a class="nav-link active" href="{{ url_for('pelanggan_produk') }}"><span class="nav-icon">&#9679;</span> Produk Saya</a>
+          <a class="nav-link" href="{{ url_for('pelanggan_klaim') }}"><span class="nav-icon">&#9873;</span> Klaim Saya</a>
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        Masuk sebagai <strong>{{ current_user.nama }}</strong><br>
+        {{ role_labels[current_user.role] }}
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <div>
+            <div class="topbar-title">Produk Saya</div>
+            <div class="topbar-sub">Daftar produk yang telah diregistrasikan</div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <a class="btn btn-ghost btn-sm" href="{{ url_for('logout') }}">Logout</a>
+        </div>
+      </header>
+
+      <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-stack">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                  <span>{{ message }}</span>
+                  <button type="button" class="close-alert" aria-label="Tutup">&times;</button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="page-header">
+          <div>
+            <h1>Produk terdaftar</h1>
+            <p>Klik detail untuk melihat masa garansi dan mengajukan klaim.</p>
+          </div>
+          <a class="btn btn-primary" href="{{ url_for('pelanggan_scan') }}">Scan / Registrasi Produk</a>
+        </div>
+
+        {% if registrasi %}
+          <div class="grid-3">
+            {% for item in registrasi %}
+              <div class="card">
+                <div class="card-header">
+                  <div>
+                    <span class="product-badge">{{ item.kategori_model }}</span>
+                    <h2 class="mt-1">{{ item.nama_produk }}</h2>
+                    <p class="small muted mb-0">{{ item.nomor_seri }}</p>
+                  </div>
+                  <span class="badge {{ item.status_garansi_aktual|status_kelas }}">{{ item.status_garansi_aktual|status_label }}</span>
+                </div>
+                <div class="info-list">
+                  <div class="info-row">
+                    <span class="label">Pembelian</span>
+                    <span class="value">{{ item.tanggal_pembelian|tanggal }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Tempat</span>
+                    <span class="value">{{ item.tempat_pembelian }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Invoice</span>
+                    <span class="value">{{ item.nomor_invoice }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Garansi berakhir</span>
+                    <span class="value">{{ item.tanggal_berakhir|tanggal }}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Total klaim</span>
+                    <span class="value">{{ item.total_klaim }}</span>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <a class="btn btn-primary btn-sm" href="{{ url_for('pelanggan_garansi', registrasi_id=item.registrasi_id) }}">Detail garansi</a>
+                  {% if item.bukti_pembelian %}
+                    <a class="btn btn-secondary btn-sm" href="{{ url_for('berkas', filename=item.bukti_pembelian) }}" target="_blank" rel="noopener">Bukti</a>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="card">
+            <div class="empty-state">
+              <strong>Belum ada produk terdaftar</strong>
+              <p class="mb-1">Pindai QR Code pada kemasan produk, lalu lengkapi data pembelian untuk mengaktifkan garansi.</p>
+              <a class="btn btn-primary" href="{{ url_for('pelanggan_scan') }}">Buka Scan / Registrasi</a>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ukuran File Terlalu Besar - Sistem Klaim Garansi</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="brand-mark mb-2">413</div>
+      <h1 class="auth-title">File terlalu besar</h1>
+      <p class="auth-sub">Ukuran total file yang dikirim melebihi batas. Maksimal 12 MB per pengiriman dan 5 MB per file.</p>
+      <div class="actions">
+        <a class="btn btn-primary" href="{{ request.referrer or url_for('login') }}">Kembali</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
